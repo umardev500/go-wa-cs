@@ -14,9 +14,10 @@ type routerStruct struct {
 	containers []types.Container
 }
 
-func NewRouter(app *fiber.App) Router {
+func NewRouter(app *fiber.App, containers []types.Container) Router {
 	return &routerStruct{
-		app: app,
+		app:        app,
+		containers: containers,
 	}
 }
 

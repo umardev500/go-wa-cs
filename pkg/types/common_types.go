@@ -7,3 +7,9 @@ type Container interface {
 	Api(r fiber.Router)
 	Web(r fiber.Router)
 }
+
+type Response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
