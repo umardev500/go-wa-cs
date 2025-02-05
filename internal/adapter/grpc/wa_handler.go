@@ -36,11 +36,6 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 		return "", err
 	}
 
-	if csid == "" {
-		// generate new csid
-		csid = "csidfromlookup"
-	}
-
 	err = w.repo.InitializeChat(remoteJid, csid)
 	if err != nil {
 		return "", err
@@ -63,13 +58,9 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 		return nil, err
 	}
 
-	if csid != "" {
-		err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		log.Info().Msgf("No csid found for remotejid: %s", req.Metadata.RemoteJid)
+	err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
+	if err != nil {
+		return nil, err
 	}
 
 	return &proto.CommonMessageResponse{
