@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,31 +10,50 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
+	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/utils"
 )
 
-type waHandler struct {
+type WaHandler struct {
+	repo repository.WaRepo
 	proto.UnimplementedWhatsAppServiceServer
 }
 
-func NewWaHandler() *waHandler {
-	return &waHandler{}
+func NewWaHandler(uc repository.WaRepo) *WaHandler {
+	return &WaHandler{
+		repo: uc,
+	}
 }
 
-func (w *waHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageRequest) (*proto.CommonMessageResponse, error) {
+func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageRequest) (*proto.CommonMessageResponse, error) {
+	// Print the full request
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+	log.Info().Msgf("Received request: %s", string(jsonData))
+
 	return &proto.CommonMessageResponse{
 		Status: "success",
 	}, nil
 }
 
-func (w *waHandler) SendExtendedTextMessage(ctx context.Context, req *proto.ExtendedTextMessageRequest) (*proto.CommonMessageResponse, error) {
+func (w *WaHandler) SendExtendedTextMessage(ctx context.Context, req *proto.ExtendedTextMessageRequest) (*proto.CommonMessageResponse, error) {
+	// Print the full request
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+	log.Info().Msgf("Received request: %s", string(jsonData))
+
 	return &proto.CommonMessageResponse{
 		Status: "success",
 	}, nil
 }
 
-func (w *waHandler) UploadMedia(stream proto.WhatsAppService_UploadMediaServer) error {
+func (w *WaHandler) UploadMedia(stream proto.WhatsAppService_UploadMediaServer) error {
 	// Define media storage directory
 	dirPath := "uploads"
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
@@ -50,7 +70,10 @@ func (w *waHandler) UploadMedia(stream proto.WhatsAppService_UploadMediaServer) 
 		chunk, err := stream.Recv()
 		if err == io.EOF {
 			fmt.Println("✅ Upload complete:", filePath)
-			response := &proto.MediaUploadResponse{FileUrl: "https://yourserver.com/" + fileName}
+			response := &proto.MediaUploadResponse{
+				FileUrl:  "https://yourserver.com/" + fileName,
+				FilePath: filePath,
+			}
 
 			return stream.SendAndClose(response)
 		}
@@ -86,7 +109,27 @@ func (w *waHandler) UploadMedia(stream proto.WhatsAppService_UploadMediaServer) 
 	}
 }
 
-func (w *waHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetadataRequest) (*proto.FileMetadataResponse, error) {
+func (w *WaHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetadataRequest) (*proto.FileMetadataResponse, error) {
+	fileName := req.FileName
+	ext := filepath.Ext(fileName)
+
+	// Define the new file path with message id
+	newFilePath := filepath.Join(filepath.Dir(fileName), fmt.Sprintf("%s%s", req.Metadata.Id, ext))
+
+	// Rename the file
+	if err := os.Rename(fileName, newFilePath); err != nil {
+		return nil, fmt.Errorf("failed to rename file: %w", err)
+	}
+
+	log.Info().Msgf("Renamed file: %s", newFilePath)
+
+	// Print the full request
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+	log.Info().Msgf("Received request: %s", string(jsonData))
+
 	return &proto.FileMetadataResponse{
 		Status: "success",
 	}, nil

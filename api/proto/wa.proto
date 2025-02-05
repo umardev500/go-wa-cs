@@ -46,6 +46,7 @@ message MediaUploadRequest {
 // ✅ Response after successful media upload
 message MediaUploadResponse {
     string fileUrl = 1; // URL of the uploaded file
+    string filePath = 2; // File name
 }
 
 message MessageMetadata {
@@ -56,6 +57,7 @@ message MessageMetadata {
 
 message ImageMessage {
     google.protobuf.StringValue caption = 1;
+    string mimeType = 2;
 }
 
 message QuotedMessage {
@@ -71,10 +73,9 @@ message ContextInfo {
 
 message FileMetadataRequest {
     string fileName = 1;          // File name
-    string filePath = 2;          // URL of the file
-    google.protobuf.StringValue caption = 3;           // Caption of the file (optional)
-    optional ContextInfo contextInfo = 4;  // Context information
-    MessageMetadata metadata = 5;  // Metadata for the file
+    google.protobuf.StringValue caption = 2;           // Caption of the file (optional)
+    optional ContextInfo contextInfo = 3;  // Context information
+    MessageMetadata metadata = 4;  // Metadata for the file
 }
 
 message FileMetadataResponse {

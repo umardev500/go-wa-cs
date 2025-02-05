@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
-	"github.com/umardev500/chat/internal/adapter/grpc"
+	"github.com/umardev500/chat/internal/container"
 	googleRpc "google.golang.org/grpc"
 )
 
@@ -27,7 +27,7 @@ func main() {
 	}
 
 	grpcServer := googleRpc.NewServer()
-	proto.RegisterWhatsAppServiceServer(grpcServer, grpc.NewWaHandler())
+	proto.RegisterWhatsAppServiceServer(grpcServer, container.NewWaContainer())
 
 	log.Info().Msgf("starting grpc server on port %s", os.Getenv("RPC_PORT"))
 	if err := grpcServer.Serve(listener); err != nil {
