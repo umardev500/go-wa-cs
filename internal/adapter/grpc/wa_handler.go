@@ -36,9 +36,11 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 		return "", err
 	}
 
-	err = w.repo.InitializeChat(remoteJid, csid)
-	if err != nil {
-		return "", err
+	if csid == "" {
+		err = w.repo.InitializeChat(remoteJid, csid)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return csid, nil
