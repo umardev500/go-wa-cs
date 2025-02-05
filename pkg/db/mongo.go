@@ -10,7 +10,7 @@ import (
 )
 
 type Mongo struct {
-	db *mongo.Database
+	Db *mongo.Database
 }
 
 func NewMongo() *Mongo {
@@ -37,7 +37,7 @@ func NewMongo() *Mongo {
 
 	database := client.Database(os.Getenv("MONGODB_DATABASE"))
 	mongo := &Mongo{
-		db: database,
+		Db: database,
 	}
 
 	log.Info().Msg("connected to mongodb")

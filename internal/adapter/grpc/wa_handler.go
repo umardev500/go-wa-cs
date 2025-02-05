@@ -21,9 +21,9 @@ type WaHandler struct {
 	proto.UnimplementedWhatsAppServiceServer
 }
 
-func NewWaHandler(uc repository.WaRepo) *WaHandler {
+func NewWaHandler(repo repository.WaRepo) *WaHandler {
 	return &WaHandler{
-		repo: uc,
+		repo: repo,
 	}
 }
 
@@ -34,6 +34,8 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 	log.Info().Msgf("Received request: %s", string(jsonData))
+
+	w.repo.SaveMessage(req)
 
 	return &proto.CommonMessageResponse{
 		Status: "success",
@@ -47,6 +49,8 @@ func (w *WaHandler) SendExtendedTextMessage(ctx context.Context, req *proto.Exte
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 	log.Info().Msgf("Received request: %s", string(jsonData))
+
+	w.repo.SaveMessage(req)
 
 	return &proto.CommonMessageResponse{
 		Status: "success",
@@ -122,6 +126,7 @@ func (w *WaHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetada
 	}
 
 	log.Info().Msgf("Renamed file: %s", newFilePath)
+	req.FileName = newFilePath
 
 	// Print the full request
 	jsonData, err := json.Marshal(req)
@@ -129,6 +134,8 @@ func (w *WaHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetada
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 	log.Info().Msgf("Received request: %s", string(jsonData))
+
+	w.repo.SaveMessage(req)
 
 	return &proto.FileMetadataResponse{
 		Status: "success",
