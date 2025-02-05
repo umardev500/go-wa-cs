@@ -23,7 +23,9 @@ service WhatsAppService {
 // ✅ Request for sending a text message
 message TextMessageRequest {
     string conversation = 1;
-    MessageMetadata metadata = 2;
+    string pushName = 2;
+    int64 timestamp = 3;
+    MessageMetadata metadata = 4;
 }
 
 // ✅ Request for sending an extended text message
