@@ -34,7 +34,9 @@ func (r *waRepo) FindActiveChat(remoteJid string) (string, error) {
 	// Create a filter to find a document with the given remotejid and status "active"
 	filter := bson.D{
 		{Key: "remotejid", Value: remoteJid},
-		{Key: "status", Value: "active"},
+		{Key: "status", Value: bson.D{
+			{Key: "$in", Value: bson.A{"active", "queueing"}},
+		}},
 	}
 
 	// Define a variable to hold the result
@@ -89,6 +91,7 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 			}
 
 			log.Info().Msgf("New chat created for remotejid: %s", remoteJid)
+			return nil
 		}
 		return err
 	}

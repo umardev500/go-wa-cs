@@ -14,6 +14,7 @@ import (
 	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/utils"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type WaHandler struct {
@@ -30,7 +31,22 @@ func NewWaHandler(repo repository.WaRepo) *WaHandler {
 func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	// TODO: do logic for selecting csid
 	// if not cs is active chating then assign new cs
-	return w.repo.FindActiveChat(remoteJid)
+	csid, err := w.repo.FindActiveChat(remoteJid)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return "", err
+	}
+
+	if csid == "" {
+		// generate new csid
+		csid = "csidfromlookup"
+	}
+
+	err = w.repo.InitializeChat(remoteJid, csid)
+	if err != nil {
+		return "", err
+	}
+
+	return csid, nil
 }
 
 func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageRequest) (*proto.CommonMessageResponse, error) {
@@ -48,14 +64,12 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	}
 
 	if csid != "" {
-		w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
-	} else {
-		err = w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
+		err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
 		if err != nil {
 			return nil, err
 		}
-
-		w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
+	} else {
+		log.Info().Msgf("No csid found for remotejid: %s", req.Metadata.RemoteJid)
 	}
 
 	return &proto.CommonMessageResponse{
