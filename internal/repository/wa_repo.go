@@ -79,7 +79,7 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 			newDocument := bson.D{
 				{Key: "remotejid", Value: remoteJid},
 				{Key: "csid", Value: csId},
-				{Key: "status", Value: "inactive"},
+				{Key: "status", Value: "scheduled"},
 				{Key: "messages", Value: []string{}}, // Empty message array
 			}
 
