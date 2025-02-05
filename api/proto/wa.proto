@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package proto;
+
+option go_package = "./api/proto";
+
+service WhatsAppService {
+    // ✅ Send a text message
+    rpc SendTextMessage(TextMessageRequest) returns (CommonMessageResponse);
+
+    // ✅ Send an extended text message
+    rpc SendExtendedTextMessage(ExtendedTextMessageRequest) returns (CommonMessageResponse);
+
+    // ✅ Upload media (image, video, audio, document, sticker)
+    rpc UploadMedia(stream MediaUploadRequest) returns (MediaUploadResponse);
+
+    // ✅ Store file metadata
+    rpc StoreFileMetadata(FileMetadataRequest) returns (FileMetadataResponse);
+}
+
+// ✅ Request for sending a text message
+message TextMessageRequest {
+    string conversation = 1;
+    MessageMetadata metadata = 2;
+}
+
+// ✅ Request for sending an extended text message
+message ExtendedTextMessageRequest {
+    string text = 1;
+    ContextInfo contextInfo = 2;
+    MessageMetadata metadata = 3;
+}
+
+// ✅ Common response for sending a message
+message CommonMessageResponse {
+    string status = 1;
+}
+
+// ✅ Request for media upload (sent in chunks)
+message MediaUploadRequest {
+    bytes chunk = 1; // The media file sent in chunks
+}
+
+// ✅ Response after successful media upload
+message MediaUploadResponse {
+    string fileUrl = 1; // URL of the uploaded file
+}
+
+message MessageMetadata {
+    string remoteJid = 1;
+    bool fromMe = 2;
+    string id = 3;
+}
+
+message ImageMessage {
+    google.protobuf.StringValue caption = 1;
+}
+
+message QuotedMessage {
+    google.protobuf.StringValue conversation = 1;
+    optional ImageMessage imageMessage = 2;
+}
+
+message ContextInfo {
+    string stanzaId = 1;
+    string participant = 2;
+    optional QuotedMessage quotedMessage = 3;
+}
+
+message FileMetadataRequest {
+    string fileName = 1;          // File name
+    string filePath = 2;          // URL of the file
+    google.protobuf.StringValue caption = 3;           // Caption of the file (optional)
+    optional ContextInfo contextInfo = 4;  // Context information
+    MessageMetadata metadata = 5;  // Metadata for the file
+}
+
+message FileMetadataResponse {
+    string status = 1;            // Status of the file upload
+}

@@ -1,0 +1,7 @@
+uploads
+.env
+
+# Air
+tmp
+.air.toml
+
