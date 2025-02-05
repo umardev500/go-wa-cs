@@ -11,6 +11,7 @@ import (
 )
 
 type WaRepo interface {
+	FindActiveChat(remoteJid string) (string, error)
 	InitializeChat(remoteJid, csId string) error
 	SaveMessage(data interface{}) error
 }
@@ -23,6 +24,40 @@ func NewWaRepo(db *db.Mongo) WaRepo {
 	return &waRepo{
 		mongoDb: db,
 	}
+}
+
+func (r *waRepo) FindActiveChat(remoteJid string) (string, error) {
+	// Get the collection
+	coll := r.mongoDb.Db.Collection("messages")
+
+	// Create a filter to find a document with the given remotejid and status "active"
+	filter := bson.D{
+		{Key: "remotejid", Value: remoteJid},
+		{Key: "status", Value: "active"},
+	}
+
+	// Define a variable to hold the result
+	var result bson.M
+
+	// Query the collection for one matching document
+	err := coll.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Info().Msgf("No active chat found for remotejid: %s", remoteJid)
+			return "", nil // Return nil if no document is found
+		}
+		log.Error().Err(err).Msg("failed to find an active chat")
+		return "", err
+	}
+
+	// Return the csid
+	csid, ok := result["csid"].(string)
+	if !ok {
+		log.Error().Msg("csid is not a string")
+		return "", fmt.Errorf("csid is not a string")
+	}
+
+	return csid, nil
 }
 
 func (r *waRepo) InitializeChat(remoteJid, csId string) error {
@@ -43,6 +78,7 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 			newDocument := bson.D{
 				{Key: "remotejid", Value: remoteJid},
 				{Key: "csid", Value: csId},
+				{Key: "status", Value: "inactive"},
 				{Key: "messages", Value: []string{}}, // Empty message array
 			}
 
