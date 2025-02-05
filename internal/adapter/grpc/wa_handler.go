@@ -34,15 +34,6 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 		return "", err
 	}
 
-	if csid == "" {
-		// TODO: do logic for selecting csid
-		// if not cs is active chating then assign new cs
-		err = w.repo.InitializeChat(remoteJid, csid)
-		if err != nil {
-			return "", err
-		}
-	}
-
 	return csid, nil
 }
 
@@ -58,6 +49,15 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	csid, err := w.getCsid(req.Metadata.RemoteJid)
 	if err != nil {
 		return nil, err
+	}
+
+	if csid == "" {
+		// TODO: do logic for selecting csid
+		// if not cs is active chating then assign new cs
+		err = w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
