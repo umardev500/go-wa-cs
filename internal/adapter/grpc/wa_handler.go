@@ -29,14 +29,14 @@ func NewWaHandler(repo repository.WaRepo) *WaHandler {
 }
 
 func (w *WaHandler) getCsid(remoteJid string) (string, error) {
-	// TODO: do logic for selecting csid
-	// if not cs is active chating then assign new cs
 	csid, err := w.repo.FindActiveChat(remoteJid)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return "", err
 	}
 
 	if csid == "" {
+		// TODO: do logic for selecting csid
+		// if not cs is active chating then assign new cs
 		err = w.repo.InitializeChat(remoteJid, csid)
 		if err != nil {
 			return "", err
