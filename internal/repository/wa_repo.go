@@ -14,6 +14,7 @@ type WaRepo interface {
 	FindActiveChat(remoteJid string) (string, error)
 	InitializeChat(remoteJid, csId string) error
 	SaveMessage(data interface{}) error
+	PushMessge(remoteJid, csid string, message interface{}) error
 }
 
 type waRepo struct {
@@ -109,5 +110,38 @@ func (r *waRepo) SaveMessage(data interface{}) error {
 		return fmt.Errorf("failed to insert message: %w", err)
 	}
 
+	return nil
+}
+
+func (r *waRepo) PushMessge(remoteJid, csid string, message interface{}) error {
+	// Get the collection
+	coll := r.mongoDb.Db.Collection("messages")
+
+	// Create a filter with both remotejid and customer_service_jid
+	filter := bson.D{
+		{Key: "remotejid", Value: remoteJid},
+		{Key: "csid", Value: csid},
+	}
+
+	// Define the update operation to push the message into the "messages" array
+	update := bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "messages", Value: message},
+		}},
+	}
+
+	// Perform the update
+	result, err := coll.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to push message: %w", err)
+	}
+
+	// Check if any document was updated
+	if result.MatchedCount == 0 {
+		log.Info().Msgf("No chat found for remotejid: %s and csid: %s, message not added", remoteJid, csid)
+		return nil
+	}
+
+	log.Info().Msgf("Message added to chat for remotejid: %s and csid: %s", remoteJid, csid)
 	return nil
 }

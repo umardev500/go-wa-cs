@@ -35,18 +35,21 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	}
 	log.Info().Msgf("Received request: %s", string(jsonData))
 
-	if req.Conversation == "cs" {
-		csid, err := w.repo.FindActiveChat(req.Metadata.RemoteJid)
+	// find the csid who active chat with the user
+	csid, err := w.repo.FindActiveChat(req.Metadata.RemoteJid)
+	if err != nil {
+		return nil, err
+	}
+
+	if csid != "" {
+		w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
+	} else {
+		err = w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
 		if err != nil {
 			return nil, err
 		}
-		if csid == "" {
-			w.repo.InitializeChat(req.Metadata.RemoteJid, "csid")
-		} else {
-			fmt.Println("already exist", csid)
-		}
-	} else {
-		w.repo.SaveMessage(req)
+
+		w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
 	}
 
 	return &proto.CommonMessageResponse{
