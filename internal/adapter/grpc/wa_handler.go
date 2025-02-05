@@ -35,7 +35,11 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	}
 	log.Info().Msgf("Received request: %s", string(jsonData))
 
-	w.repo.SaveMessage(req)
+	if req.Conversation == "cs" {
+		w.repo.InitializeChat(req.Metadata.RemoteJid, "csid")
+	} else {
+		w.repo.SaveMessage(req)
+	}
 
 	return &proto.CommonMessageResponse{
 		Status: "success",
