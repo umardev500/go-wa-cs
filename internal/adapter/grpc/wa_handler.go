@@ -27,6 +27,12 @@ func NewWaHandler(repo repository.WaRepo) *WaHandler {
 	}
 }
 
+func (w *WaHandler) getCsid(remoteJid string) (string, error) {
+	// TODO: do logic for selecting csid
+	// if not cs is active chating then assign new cs
+	return w.repo.FindActiveChat(remoteJid)
+}
+
 func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageRequest) (*proto.CommonMessageResponse, error) {
 	// Print the full request
 	jsonData, err := json.Marshal(req)
@@ -36,7 +42,7 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	log.Info().Msgf("Received request: %s", string(jsonData))
 
 	// find the csid who active chat with the user
-	csid, err := w.repo.FindActiveChat(req.Metadata.RemoteJid)
+	csid, err := w.getCsid(req.Metadata.RemoteJid)
 	if err != nil {
 		return nil, err
 	}
