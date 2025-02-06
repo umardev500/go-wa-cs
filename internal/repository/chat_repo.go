@@ -32,7 +32,7 @@ func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
 		},
 		bson.D{
 			{Key: "$sort", Value: bson.D{
-				{Key: "messages.metadata.timestamp", Value: -1},
+				{Key: "messages.timestamp", Value: -1},
 			}},
 		},
 		bson.D{
@@ -44,11 +44,11 @@ func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
 				{Key: "status", Value: bson.D{
 					{Key: "$last", Value: "$status"},
 				}},
+				{Key: "unreadCount", Value: bson.D{
+					{Key: "$last", Value: "$unreadCount"},
+				}},
 				{Key: "lastMessage", Value: bson.D{
 					{Key: "$last", Value: "$messages"},
-				}},
-				{Key: "messageTimestamp", Value: bson.D{
-					{Key: "$last", Value: "$messages.metadata.timestamp"},
 				}},
 			}},
 		},
@@ -58,10 +58,14 @@ func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
 				{Key: "remotejid", Value: "$_id.remotejid"},
 				{Key: "csid", Value: "$_id.csid"},
 				{Key: "status", Value: 1},
+				{Key: "unreadCount", Value: 1},
 				{Key: "lastMessage", Value: 1},
-				{Key: "messageTimestamp", Value: 1},
 			}},
 		},
+		// ✅ FINAL SORT: Ensure list is sorted by latest message timestamp
+		bson.D{{Key: "$sort", Value: bson.D{
+			{Key: "lastMessage.timestamp", Value: -1},
+		}}},
 	}
 
 	cur, err := coll.Aggregate(ctx, aggregationPipeline)

@@ -1,11 +1,11 @@
 package domain
 
 type ChatList struct {
-	Status           string      `json:"status"`
-	LastMessage      LastMessage `json:"lastMessage"`
-	MessageTimestamp *int64      `json:"messageTimestamp"`
-	RemoteJID        string      `json:"remotejid"`
-	CSID             string      `json:"csid"`
+	Status      string      `json:"status"`
+	UnreadCount int         `json:"unreadCount"`
+	LastMessage LastMessage `json:"lastMessage"`
+	RemoteJID   string      `json:"remotejid"`
+	CSID        string      `json:"csid"`
 }
 
 type LastMessage struct {
