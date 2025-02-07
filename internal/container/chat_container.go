@@ -26,6 +26,7 @@ func NewChatContainer(mongoDb *db.Mongo) types.Container {
 func (c *chatContainer) Api(r fiber.Router) {
 	chat := r.Group("/chat")
 	chat.Get("/", c.handler.GetChatList)
+	chat.Get("/sse/:id", c.handler.Sse)
 }
 
 func (c *chatContainer) Web(r fiber.Router) {}

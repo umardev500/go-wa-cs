@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -26,6 +27,12 @@ func init() {
 func start(ctx context.Context) {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	ch := make(chan error, 1)
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowHeaders:     "Cache-Control",
+		AllowCredentials: true,
+	}))
 
 	mongoDb := db.NewMongo()
 	containers := container.NewContainerRegister(mongoDb)
