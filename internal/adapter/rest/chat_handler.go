@@ -59,6 +59,7 @@ func (ch *chatHandler) Sse(c *fiber.Ctx) error {
 				fmt.Fprintf(w, "data: %s\n\n", msg)
 				if err := w.Flush(); err != nil {
 					log.Error().Err(err).Msg("failed to flush sse")
+					close(statusChannel)
 					break
 				}
 			}
