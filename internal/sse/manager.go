@@ -12,6 +12,18 @@ var (
 	clientLock sync.Mutex
 )
 
+func GetSseResource(userId string, resource string) chan string {
+	if _, ok := sseClients[userId]; !ok {
+		return nil
+	}
+
+	if _, ok := sseClients[userId][resource]; !ok {
+		return nil
+	}
+
+	return sseClients[userId][resource]
+}
+
 // Add a new client to a specific event type
 func AddClient(userId string, resource string) chan string {
 	clientLock.Lock()

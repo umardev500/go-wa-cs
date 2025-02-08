@@ -48,7 +48,7 @@ func (ch *chatHandler) Sse(c *fiber.Ctx) error {
 	userId := "12345"
 
 	// Create a new channel for this client
-	statusChannel := sse.AddClient(configs.SSE_CHAT, userId)
+	statusChannel := sse.AddClient(userId, configs.SSE_CHAT)
 
 	log.Info().Msg("client connected")
 
