@@ -11,6 +11,7 @@ import (
 	"github.com/umardev500/chat/internal/usecase"
 	"github.com/umardev500/chat/pkg/db"
 	"github.com/umardev500/chat/pkg/types"
+	"github.com/umardev500/chat/pkg/utils"
 )
 
 type chatContainer struct {
@@ -72,6 +73,13 @@ func (c *chatContainer) Api(r fiber.Router) {
 		channel <- string(jsonMessage)
 
 		return c.JSON(currentStatus)
+	})
+	chat.Get("/ws/test", func(c *fiber.Ctx) error {
+		for _, conn := range utils.WsGetClients() {
+			conn.WriteJSON("hello")
+		}
+
+		return nil
 	})
 }
 

@@ -8,5 +8,6 @@ import (
 func NewContainerRegister(mongoDb *db.Mongo) []types.Container {
 	return []types.Container{
 		NewChatContainer(mongoDb),
+		NewWsContainer(),
 	}
 }
