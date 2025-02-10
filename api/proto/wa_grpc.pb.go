@@ -25,6 +25,7 @@ const (
 	WhatsAppService_StoreFileMetadata_FullMethodName       = "/proto.WhatsAppService/StoreFileMetadata"
 	WhatsAppService_StreamMessage_FullMethodName           = "/proto.WhatsAppService/StreamMessage"
 	WhatsAppService_SendOnlineUser_FullMethodName          = "/proto.WhatsAppService/SendOnlineUser"
+	WhatsAppService_SendTyping_FullMethodName              = "/proto.WhatsAppService/SendTyping"
 )
 
 // WhatsAppServiceClient is the client API for WhatsAppService service.
@@ -43,6 +44,8 @@ type WhatsAppServiceClient interface {
 	StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error)
 	// ✅ Send online status
 	SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
+	// ✅ Send typing
+	SendTyping(ctx context.Context, in *SendTypingRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
 }
 
 type whatsAppServiceClient struct {
@@ -119,6 +122,16 @@ func (c *whatsAppServiceClient) SendOnlineUser(ctx context.Context, in *SendOnli
 	return out, nil
 }
 
+func (c *whatsAppServiceClient) SendTyping(ctx context.Context, in *SendTypingRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonMessageResponse)
+	err := c.cc.Invoke(ctx, WhatsAppService_SendTyping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WhatsAppServiceServer is the server API for WhatsAppService service.
 // All implementations must embed UnimplementedWhatsAppServiceServer
 // for forward compatibility.
@@ -135,6 +148,8 @@ type WhatsAppServiceServer interface {
 	StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error
 	// ✅ Send online status
 	SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error)
+	// ✅ Send typing
+	SendTyping(context.Context, *SendTypingRequest) (*CommonMessageResponse, error)
 	mustEmbedUnimplementedWhatsAppServiceServer()
 }
 
@@ -162,6 +177,9 @@ func (UnimplementedWhatsAppServiceServer) StreamMessage(grpc.BidiStreamingServer
 }
 func (UnimplementedWhatsAppServiceServer) SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendOnlineUser not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) SendTyping(context.Context, *SendTypingRequest) (*CommonMessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendTyping not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) mustEmbedUnimplementedWhatsAppServiceServer() {}
 func (UnimplementedWhatsAppServiceServer) testEmbeddedByValue()                         {}
@@ -270,6 +288,24 @@ func _WhatsAppService_SendOnlineUser_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WhatsAppService_SendTyping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTypingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WhatsAppServiceServer).SendTyping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WhatsAppService_SendTyping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WhatsAppServiceServer).SendTyping(ctx, req.(*SendTypingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WhatsAppService_ServiceDesc is the grpc.ServiceDesc for WhatsAppService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -292,6 +328,10 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendOnlineUser",
 			Handler:    _WhatsAppService_SendOnlineUser_Handler,
+		},
+		{
+			MethodName: "SendTyping",
+			Handler:    _WhatsAppService_SendTyping_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

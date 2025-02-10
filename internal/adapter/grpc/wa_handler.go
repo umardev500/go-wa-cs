@@ -246,3 +246,29 @@ func (w *WaHandler) SendOnlineUser(ctx context.Context, req *proto.SendOnlineUse
 		Status: "success",
 	}, nil
 }
+
+func (w *WaHandler) SendTyping(ctx context.Context, req *proto.SendTypingRequest) (*proto.CommonMessageResponse, error) {
+	wsClients := utils.WsGetClients()
+
+	var data = map[string]interface{}{
+		"mt": configs.MessageTypeTyping,
+		"data": []map[string]interface{}{
+			{
+				"presence":  req.Presence,
+				"remotejid": req.Jid,
+			},
+		},
+	}
+
+	for _, client := range wsClients {
+		err := client.WriteJSON(data)
+		if err != nil {
+			log.Err(err).Msg("failed to write typing json data to the websocket client")
+			return nil, err
+		}
+	}
+
+	return &proto.CommonMessageResponse{
+		Status: "success",
+	}, nil
+}
