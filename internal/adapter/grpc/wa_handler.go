@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -22,11 +21,6 @@ type WaHandler struct {
 	repo repository.WaRepo
 	proto.UnimplementedWhatsAppServiceServer
 }
-
-// Create a global channel to push messages to clients
-var streamChan = make(chan *proto.StreamMessageResponse)
-var mu sync.Mutex
-var streamClients []proto.WhatsAppService_StreamMessageServer
 
 func NewWaHandler(repo repository.WaRepo) *WaHandler {
 	return &WaHandler{

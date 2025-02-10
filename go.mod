@@ -7,6 +7,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.33.0
+	github.com/soheilhy/cmux v0.1.5
 	github.com/valyala/fasthttp v1.58.0
 	go.mongodb.org/mongo-driver/v2 v2.0.0
 	google.golang.org/grpc v1.70.0
