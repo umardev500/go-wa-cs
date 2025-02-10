@@ -36,8 +36,8 @@ func NewWaHandler(repo repository.WaRepo) *WaHandler {
 
 func (w *WaHandler) TestStream(ctx context.Context, req *proto.Empty) (*proto.Empty, error) {
 	streamChan <- &proto.StreamMessageResponse{
-		Mt:   "status",
-		Jids: []string{"6283142765573@s.whatsapp.net"},
+		Mt:  "status",
+		Jid: []string{"6283142765573@s.whatsapp.net"},
 	}
 
 	return &proto.Empty{}, nil
@@ -75,7 +75,7 @@ func (w *WaHandler) StreamMessage(stream proto.WhatsAppService_StreamMessageServ
 	// Start a goroutine to listen for new messages and send them to the client
 	go func() {
 		for msg := range streamChan {
-			log.Printf("📤 Sending triggered message: %v", msg.Jids)
+			log.Printf("📤 Sending triggered message: %v", msg.Jid)
 			for _, client := range streamClients {
 				err := client.Send(msg)
 				if err != nil {
@@ -226,6 +226,14 @@ func (w *WaHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetada
 	w.repo.SaveMessage(req)
 
 	return &proto.FileMetadataResponse{
+		Status: "success",
+	}, nil
+}
+
+func (w *WaHandler) SendOnlineUser(ctx context.Context, req *proto.SendOnlineUserRequest) (*proto.CommonMessageResponse, error) {
+	fmt.Println(req.Jid, req.Presence, req.LastSeen)
+
+	return &proto.CommonMessageResponse{
 		Status: "success",
 	}, nil
 }

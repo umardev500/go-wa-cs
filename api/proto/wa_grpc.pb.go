@@ -24,6 +24,7 @@ const (
 	WhatsAppService_UploadMedia_FullMethodName             = "/proto.WhatsAppService/UploadMedia"
 	WhatsAppService_StoreFileMetadata_FullMethodName       = "/proto.WhatsAppService/StoreFileMetadata"
 	WhatsAppService_StreamMessage_FullMethodName           = "/proto.WhatsAppService/StreamMessage"
+	WhatsAppService_SendOnlineUser_FullMethodName          = "/proto.WhatsAppService/SendOnlineUser"
 	WhatsAppService_TestStream_FullMethodName              = "/proto.WhatsAppService/TestStream"
 )
 
@@ -40,6 +41,7 @@ type WhatsAppServiceClient interface {
 	// ✅ Store file metadata
 	StoreFileMetadata(ctx context.Context, in *FileMetadataRequest, opts ...grpc.CallOption) (*FileMetadataResponse, error)
 	StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error)
+	SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
 	TestStream(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -107,6 +109,16 @@ func (c *whatsAppServiceClient) StreamMessage(ctx context.Context, opts ...grpc.
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type WhatsAppService_StreamMessageClient = grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse]
 
+func (c *whatsAppServiceClient) SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonMessageResponse)
+	err := c.cc.Invoke(ctx, WhatsAppService_SendOnlineUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *whatsAppServiceClient) TestStream(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Empty)
@@ -130,6 +142,7 @@ type WhatsAppServiceServer interface {
 	// ✅ Store file metadata
 	StoreFileMetadata(context.Context, *FileMetadataRequest) (*FileMetadataResponse, error)
 	StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error
+	SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error)
 	TestStream(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedWhatsAppServiceServer()
 }
@@ -155,6 +168,9 @@ func (UnimplementedWhatsAppServiceServer) StoreFileMetadata(context.Context, *Fi
 }
 func (UnimplementedWhatsAppServiceServer) StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method StreamMessage not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendOnlineUser not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) TestStream(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestStream not implemented")
@@ -248,6 +264,24 @@ func _WhatsAppService_StreamMessage_Handler(srv interface{}, stream grpc.ServerS
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type WhatsAppService_StreamMessageServer = grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]
 
+func _WhatsAppService_SendOnlineUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendOnlineUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WhatsAppServiceServer).SendOnlineUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WhatsAppService_SendOnlineUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WhatsAppServiceServer).SendOnlineUser(ctx, req.(*SendOnlineUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WhatsAppService_TestStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -284,6 +318,10 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreFileMetadata",
 			Handler:    _WhatsAppService_StoreFileMetadata_Handler,
+		},
+		{
+			MethodName: "SendOnlineUser",
+			Handler:    _WhatsAppService_SendOnlineUser_Handler,
 		},
 		{
 			MethodName: "TestStream",

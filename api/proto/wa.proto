@@ -21,8 +21,17 @@ service WhatsAppService {
 
     rpc StreamMessage(stream StreamMessageRequest) returns (stream StreamMessageResponse);
 
+    rpc SendOnlineUser(SendOnlineUserRequest) returns (CommonMessageResponse);
+
     rpc TestStream(Empty) returns (Empty);
 }
+
+message SendOnlineUserRequest {
+    string jid = 1;
+    string presence = 2;
+    int64 lastSeen = 3;
+}
+
 
 message Empty {}
 
@@ -33,7 +42,7 @@ message StreamMessageRequest {
 
 message StreamMessageResponse {
     string mt = 1;
-    repeated string jids = 2;
+    repeated string jid = 2;
 }
 
 // ✅ Request for sending a text message
