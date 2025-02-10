@@ -34,6 +34,7 @@ func (ch *chatHandler) GetChatList(c *fiber.Ctx) error {
 	defer cancel()
 
 	resp := ch.uc.GetChatList(ctx)
+	time.Sleep(2 * time.Second)
 
 	return c.JSON(resp)
 }

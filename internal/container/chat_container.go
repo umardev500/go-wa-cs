@@ -2,6 +2,7 @@ package container
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/umardev500/chat/configs"
@@ -75,8 +76,35 @@ func (c *chatContainer) Api(r fiber.Router) {
 		return c.JSON(currentStatus)
 	})
 	chat.Get("/ws/test", func(c *fiber.Ctx) error {
+		if currentStatus == "online" {
+			currentStatus = "offline"
+		} else {
+			currentStatus = "online"
+		}
+
 		for _, conn := range utils.WsGetClients() {
-			conn.WriteJSON("hello")
+			var data = map[string]interface{}{
+				"mt": "status",
+				"data": []map[string]interface{}{
+					{
+						"status":    currentStatus,
+						"remotejid": "6285123456791@s.whatsapp.net",
+					},
+					{
+						"status":    currentStatus,
+						"remotejid": "6285123456781@s.whatsapp.net",
+					},
+				},
+			}
+			jsonByte, err := json.Marshal(data)
+			if err != nil {
+				fmt.Println("Error marshaling JSON:", err)
+				return err
+			}
+
+			fmt.Println("send", string(jsonByte))
+
+			conn.WriteJSON(data)
 		}
 
 		return nil
