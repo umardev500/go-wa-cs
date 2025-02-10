@@ -18,6 +18,22 @@ service WhatsAppService {
 
     // ✅ Store file metadata
     rpc StoreFileMetadata(FileMetadataRequest) returns (FileMetadataResponse);
+
+    rpc StreamMessage(stream StreamMessageRequest) returns (stream StreamMessageResponse);
+
+    rpc TestStream(Empty) returns (Empty);
+}
+
+message Empty {}
+
+// ✅ Request for online status
+message StreamMessageRequest {
+
+}
+
+message StreamMessageResponse {
+    string mt = 1;
+    repeated string jids = 2;
 }
 
 // ✅ Request for sending a text message

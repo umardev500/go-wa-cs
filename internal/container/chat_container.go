@@ -1,10 +1,13 @@
 package container
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
+	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/adapter/rest"
 	"github.com/umardev500/chat/internal/repository"
@@ -13,6 +16,7 @@ import (
 	"github.com/umardev500/chat/pkg/db"
 	"github.com/umardev500/chat/pkg/types"
 	"github.com/umardev500/chat/pkg/utils"
+	"google.golang.org/grpc"
 )
 
 type chatContainer struct {
@@ -34,6 +38,14 @@ var (
 )
 
 func (c *chatContainer) Api(r fiber.Router) {
+	conn, err := grpc.Dial("localhost:8000", grpc.WithInsecure())
+	if err != nil {
+		log.Error().Err(err).Msg("failed to dial grpc server")
+		return
+	}
+
+	client := proto.NewWhatsAppServiceClient(conn)
+
 	chat := r.Group("/chat")
 	chat.Get("/", c.handler.GetChatList)
 	chat.Get("/sse/:id", c.handler.Sse)
@@ -108,6 +120,14 @@ func (c *chatContainer) Api(r fiber.Router) {
 		}
 
 		return nil
+	})
+	chat.Get("/stream", func(c *fiber.Ctx) error {
+		// grpc.GetStreamChannel() <- &proto.StreamMessageRequest{
+		// 	Jid: "6285123456781@s.whatsapp.net",
+		// }
+		client.TestStream(context.Background(), &proto.Empty{})
+
+		return c.JSON("ok")
 	})
 }
 

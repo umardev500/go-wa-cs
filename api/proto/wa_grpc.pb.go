@@ -23,6 +23,8 @@ const (
 	WhatsAppService_SendExtendedTextMessage_FullMethodName = "/proto.WhatsAppService/SendExtendedTextMessage"
 	WhatsAppService_UploadMedia_FullMethodName             = "/proto.WhatsAppService/UploadMedia"
 	WhatsAppService_StoreFileMetadata_FullMethodName       = "/proto.WhatsAppService/StoreFileMetadata"
+	WhatsAppService_StreamMessage_FullMethodName           = "/proto.WhatsAppService/StreamMessage"
+	WhatsAppService_TestStream_FullMethodName              = "/proto.WhatsAppService/TestStream"
 )
 
 // WhatsAppServiceClient is the client API for WhatsAppService service.
@@ -37,6 +39,8 @@ type WhatsAppServiceClient interface {
 	UploadMedia(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[MediaUploadRequest, MediaUploadResponse], error)
 	// ✅ Store file metadata
 	StoreFileMetadata(ctx context.Context, in *FileMetadataRequest, opts ...grpc.CallOption) (*FileMetadataResponse, error)
+	StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error)
+	TestStream(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type whatsAppServiceClient struct {
@@ -90,6 +94,29 @@ func (c *whatsAppServiceClient) StoreFileMetadata(ctx context.Context, in *FileM
 	return out, nil
 }
 
+func (c *whatsAppServiceClient) StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &WhatsAppService_ServiceDesc.Streams[1], WhatsAppService_StreamMessage_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamMessageRequest, StreamMessageResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type WhatsAppService_StreamMessageClient = grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse]
+
+func (c *whatsAppServiceClient) TestStream(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, WhatsAppService_TestStream_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WhatsAppServiceServer is the server API for WhatsAppService service.
 // All implementations must embed UnimplementedWhatsAppServiceServer
 // for forward compatibility.
@@ -102,6 +129,8 @@ type WhatsAppServiceServer interface {
 	UploadMedia(grpc.ClientStreamingServer[MediaUploadRequest, MediaUploadResponse]) error
 	// ✅ Store file metadata
 	StoreFileMetadata(context.Context, *FileMetadataRequest) (*FileMetadataResponse, error)
+	StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error
+	TestStream(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedWhatsAppServiceServer()
 }
 
@@ -123,6 +152,12 @@ func (UnimplementedWhatsAppServiceServer) UploadMedia(grpc.ClientStreamingServer
 }
 func (UnimplementedWhatsAppServiceServer) StoreFileMetadata(context.Context, *FileMetadataRequest) (*FileMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreFileMetadata not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method StreamMessage not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) TestStream(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TestStream not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) mustEmbedUnimplementedWhatsAppServiceServer() {}
 func (UnimplementedWhatsAppServiceServer) testEmbeddedByValue()                         {}
@@ -206,6 +241,31 @@ func _WhatsAppService_StoreFileMetadata_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WhatsAppService_StreamMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(WhatsAppServiceServer).StreamMessage(&grpc.GenericServerStream[StreamMessageRequest, StreamMessageResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type WhatsAppService_StreamMessageServer = grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]
+
+func _WhatsAppService_TestStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WhatsAppServiceServer).TestStream(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WhatsAppService_TestStream_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WhatsAppServiceServer).TestStream(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WhatsAppService_ServiceDesc is the grpc.ServiceDesc for WhatsAppService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -225,11 +285,21 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "StoreFileMetadata",
 			Handler:    _WhatsAppService_StoreFileMetadata_Handler,
 		},
+		{
+			MethodName: "TestStream",
+			Handler:    _WhatsAppService_TestStream_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "UploadMedia",
 			Handler:       _WhatsAppService_UploadMedia_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "StreamMessage",
+			Handler:       _WhatsAppService_StreamMessage_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

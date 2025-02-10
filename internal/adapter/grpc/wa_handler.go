@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -22,10 +23,24 @@ type WaHandler struct {
 	proto.UnimplementedWhatsAppServiceServer
 }
 
+// Create a global channel to push messages to clients
+var streamChan = make(chan *proto.StreamMessageResponse)
+var mu sync.Mutex
+var streamClients []proto.WhatsAppService_StreamMessageServer
+
 func NewWaHandler(repo repository.WaRepo) *WaHandler {
 	return &WaHandler{
 		repo: repo,
 	}
+}
+
+func (w *WaHandler) TestStream(ctx context.Context, req *proto.Empty) (*proto.Empty, error) {
+	streamChan <- &proto.StreamMessageResponse{
+		Mt:   "status",
+		Jids: []string{"6283142765573@s.whatsapp.net"},
+	}
+
+	return &proto.Empty{}, nil
 }
 
 func (w *WaHandler) getCsid(remoteJid string) (string, error) {
@@ -35,6 +50,51 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	}
 
 	return csid, nil
+}
+
+func removeStream(client proto.WhatsAppService_StreamMessageServer) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var updatedClients []proto.WhatsAppService_StreamMessageServer
+	for _, s := range streamClients {
+		if s != client { // Keep all streams except the one to remove
+			updatedClients = append(updatedClients, s)
+		}
+	}
+
+	streamClients = updatedClients
+}
+
+func (w *WaHandler) StreamMessage(stream proto.WhatsAppService_StreamMessageServer) error {
+	// Register the client connection
+	mu.Lock()
+	streamClients = append(streamClients, stream)
+	mu.Unlock()
+
+	// Start a goroutine to listen for new messages and send them to the client
+	go func() {
+		for msg := range streamChan {
+			log.Printf("📤 Sending triggered message: %v", msg.Jids)
+			for _, client := range streamClients {
+				err := client.Send(msg)
+				if err != nil {
+					log.Err(err).Msg("failed to send message")
+				}
+			}
+		}
+	}()
+
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			log.Err(err).Msg("failed to receive message")
+			removeStream(stream)
+			return err
+		}
+
+		log.Info().Msgf("Received message: %s", msg)
+	}
 }
 
 func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageRequest) (*proto.CommonMessageResponse, error) {
