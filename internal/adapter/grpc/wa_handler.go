@@ -12,6 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
+	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/utils"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -216,7 +217,30 @@ func (w *WaHandler) StoreFileMetadata(ctx context.Context, req *proto.FileMetada
 }
 
 func (w *WaHandler) SendOnlineUser(ctx context.Context, req *proto.SendOnlineUserRequest) (*proto.CommonMessageResponse, error) {
-	fmt.Println(req.Jid, req.Presence, req.LastSeen)
+	wsClients := utils.WsGetClients()
+
+	var status = configs.PresenseOnlineText
+	if req.Presence == string(configs.PresenseOffline) {
+		status = configs.PresenseOfflineText
+	}
+
+	var data = map[string]interface{}{
+		"mt": "status",
+		"data": []map[string]interface{}{
+			{
+				"status":    status,
+				"remotejid": req.Jid,
+			},
+		},
+	}
+
+	for _, client := range wsClients {
+		err := client.WriteJSON(data)
+		if err != nil {
+			log.Err(err).Msg("failed to write json to the websocket client")
+			return nil, err
+		}
+	}
 
 	return &proto.CommonMessageResponse{
 		Status: "success",

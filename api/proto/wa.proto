@@ -24,6 +24,14 @@ service WhatsAppService {
 
     // ✅ Send online status
     rpc SendOnlineUser(SendOnlineUserRequest) returns (CommonMessageResponse);
+
+    // ✅ Send typing
+    rpc SendTyping(SendTypingRequest) returns (CommonMessageResponse);
+}
+
+message SendTypingRequest {
+    string jid = 1;
+    string presence = 2;
 }
 
 message SendOnlineUserRequest {
