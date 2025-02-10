@@ -19,11 +19,11 @@ service WhatsAppService {
     // ✅ Store file metadata
     rpc StoreFileMetadata(FileMetadataRequest) returns (FileMetadataResponse);
 
+    // ✅ Stream messages
     rpc StreamMessage(stream StreamMessageRequest) returns (stream StreamMessageResponse);
 
+    // ✅ Send online status
     rpc SendOnlineUser(SendOnlineUserRequest) returns (CommonMessageResponse);
-
-    rpc TestStream(Empty) returns (Empty);
 }
 
 message SendOnlineUserRequest {
@@ -31,7 +31,6 @@ message SendOnlineUserRequest {
     string presence = 2;
     int64 lastSeen = 3;
 }
-
 
 message Empty {}
 

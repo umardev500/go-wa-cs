@@ -28,15 +28,6 @@ func NewWaHandler(repo repository.WaRepo) *WaHandler {
 	}
 }
 
-func (w *WaHandler) TestStream(ctx context.Context, req *proto.Empty) (*proto.Empty, error) {
-	streamChan <- &proto.StreamMessageResponse{
-		Mt:  "status",
-		Jid: []string{"6283142765573@s.whatsapp.net"},
-	}
-
-	return &proto.Empty{}, nil
-}
-
 func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	csid, err := w.repo.FindActiveChat(remoteJid)
 	if err != nil && err != mongo.ErrNoDocuments {
