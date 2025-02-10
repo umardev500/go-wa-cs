@@ -18,6 +18,8 @@ func WsAddClient(userId string, conn *websocket.Conn) {
 	if _, ok := wsClients[userId]; !ok {
 		wsClients[userId] = conn
 	}
+
+	wsClients[userId] = conn
 }
 
 func WsGetClient(userId string) *websocket.Conn {
