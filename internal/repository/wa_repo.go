@@ -82,6 +82,7 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 				{Key: "remotejid", Value: remoteJid},
 				{Key: "csid", Value: csId},
 				{Key: "status", Value: "queueing"},
+				{Key: "unread_count", Value: 0},
 				{Key: "messages", Value: []string{}}, // Empty message array
 			}
 
