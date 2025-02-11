@@ -124,6 +124,9 @@ func (c *chatContainer) Api(r fiber.Router) {
 		fmt.Println(grpc.GetStreamClients())
 		return c.JSON("pong")
 	})
+
+	// update unread counter
+	chat.Get("/update-unread-counter", c.handler.UpdateUnreadCounter)
 }
 
 func (c *chatContainer) Web(r fiber.Router) {}

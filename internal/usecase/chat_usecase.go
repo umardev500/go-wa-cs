@@ -14,6 +14,7 @@ import (
 
 type ChatUsecase interface {
 	GetChatList(ctx context.Context) *types.Response
+	UpdateUnreadCounter(ctx context.Context, csId string, jid string) types.Response
 	PushChat(ctx context.Context, csId string, req *domain.PushChat) error
 }
 
@@ -105,5 +106,22 @@ func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
 		Success: true,
 		Message: "success",
 		Data:    chats,
+	}
+}
+
+func (c *chatUsecase) UpdateUnreadCounter(ctx context.Context, csId string, jid string) types.Response {
+	updated, err := c.repo.UpdateUnreadCounter(ctx, csId, jid, 1)
+	if err != nil {
+		return types.Response{
+			Success: false,
+			Message: err.Error(),
+			Data:    nil,
+		}
+	}
+
+	return types.Response{
+		Success: updated,
+		Message: "Update unread counter",
+		Data:    nil,
 	}
 }

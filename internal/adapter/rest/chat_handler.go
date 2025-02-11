@@ -16,6 +16,7 @@ import (
 
 type ChatHandler interface {
 	GetChatList(c *fiber.Ctx) error
+	UpdateUnreadCounter(c *fiber.Ctx) error
 	Sse(c *fiber.Ctx) error
 }
 
@@ -67,4 +68,21 @@ func (ch *chatHandler) Sse(c *fiber.Ctx) error {
 		}))
 
 	return nil
+}
+
+func (ch *chatHandler) UpdateUnreadCounter(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	csId := c.Query("csid")
+	jid := c.Query("jid")
+
+	if csId == "" || jid == "" {
+		log.Error().Msgf("csid or jid is empty %s:%s", csId, jid)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	resp := ch.uc.UpdateUnreadCounter(ctx, csId, jid)
+
+	return c.JSON(resp)
 }

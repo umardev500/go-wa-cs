@@ -17,6 +17,7 @@ type ChatRepo interface {
 	CheckExist(ctx context.Context, remoteJid string) (bool, error)
 	CheckExistByCsIdAndRemoteJid(ctx context.Context, userId, remoteJid string) (bool, error)
 	PushMessge(remoteJid, csid string, message interface{}) error
+	UpdateUnreadCounter(ctx context.Context, csId string, jid string, value int64) (bool, error)
 }
 
 type chatRepo struct {
@@ -188,4 +189,37 @@ func (r *chatRepo) PushMessge(remoteJid, csid string, message interface{}) error
 
 	log.Info().Msgf("Message added to chat for remotejid: %s and csid: %s message: %v", remoteJid, csid, message)
 	return nil
+}
+
+func (r *chatRepo) UpdateUnreadCounter(ctx context.Context, csId string, jid string, value int64) (bool, error) {
+	// Get the collection
+	coll := r.mongoDb.Db.Collection("messages")
+
+	// Create a filter with both remotejid and customer_service_jid
+	filter := bson.D{
+		{Key: "remotejid", Value: jid},
+		{Key: "csid", Value: csId},
+	}
+
+	// Define the update operation to push the message into the "messages" array
+	update := bson.D{
+		{Key: "$inc", Value: bson.D{
+			{Key: "unread_count", Value: value},
+		}},
+	}
+
+	// Perform the update
+	result, err := coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, fmt.Errorf("failed to push message: %w", err)
+	}
+
+	// Check if any document was updated
+	if result.MatchedCount == 0 {
+		log.Info().Msgf("No chat found for remotejid: %s and csid: %s, message not added", jid, csId)
+		return false, nil
+	}
+
+	log.Info().Msgf("Unread counter updated for remotejid: %s and csid: %s", jid, csId)
+	return true, nil
 }
