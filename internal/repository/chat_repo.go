@@ -48,7 +48,7 @@ func (r *chatRepo) InitializeChat(remoteJid, csId string) (bool, error) {
 				{Key: "remotejid", Value: remoteJid},
 				{Key: "csid", Value: csId},
 				{Key: "status", Value: "queueing"},
-				{Key: "unread_count", Value: 0},
+				{Key: "unreadCount", Value: 0},
 				{Key: "messages", Value: []string{}}, // Empty message array
 			}
 
@@ -204,7 +204,7 @@ func (r *chatRepo) UpdateUnreadCounter(ctx context.Context, csId string, jid str
 	// Define the update operation to push the message into the "messages" array
 	update := bson.D{
 		{Key: "$inc", Value: bson.D{
-			{Key: "unread_count", Value: value},
+			{Key: "unreadCount", Value: value},
 		}},
 	}
 
