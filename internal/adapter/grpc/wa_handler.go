@@ -102,9 +102,13 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 		// if not cs is active chating then assign new cs
 	}
 
-	err = w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
+	isInitial, err := w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
 	if err != nil {
 		return nil, err
+	}
+
+	if isInitial {
+		log.Info().Msg("is is initial")
 	}
 
 	err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)

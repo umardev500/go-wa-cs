@@ -63,8 +63,10 @@ message TextMessageRequest {
 // ✅ Request for sending an extended text message
 message ExtendedTextMessageRequest {
     string text = 1;
-    ContextInfo contextInfo = 2;
-    MessageMetadata metadata = 3;
+    string pushName = 2;
+    int64 timestamp = 3;
+    ContextInfo contextInfo = 4;
+    MessageMetadata metadata = 5;
 }
 
 // ✅ Common response for sending a message

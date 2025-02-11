@@ -3,12 +3,14 @@ package usecase
 import (
 	"context"
 
+	"github.com/umardev500/chat/internal/domain"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/types"
 )
 
 type ChatUsecase interface {
 	GetChatList(ctx context.Context) *types.Response
+	PushChat(ctx context.Context, req *domain.PushChat)
 }
 
 type chatUsecase struct {
@@ -20,6 +22,8 @@ func NewChatUsecase(repo repository.ChatRepo) ChatUsecase {
 		repo: repo,
 	}
 }
+
+func (c *chatUsecase) PushChat(ctx context.Context, req *domain.PushChat) {}
 
 func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
 	chats, err := c.repo.GetChatList(ctx)

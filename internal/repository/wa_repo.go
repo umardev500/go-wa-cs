@@ -12,7 +12,7 @@ import (
 
 type WaRepo interface {
 	FindActiveChat(remoteJid string) (string, error)
-	InitializeChat(remoteJid, csId string) error
+	InitializeChat(remoteJid, csId string) (bool, error)
 	SaveMessage(data interface{}) error
 	PushMessge(remoteJid, csid string, message interface{}) error
 }
@@ -63,7 +63,7 @@ func (r *waRepo) FindActiveChat(remoteJid string) (string, error) {
 	return csid, nil
 }
 
-func (r *waRepo) InitializeChat(remoteJid, csId string) error {
+func (r *waRepo) InitializeChat(remoteJid, csId string) (bool, error) {
 	// Get the collection
 	coll := r.mongoDb.Db.Collection("messages")
 
@@ -91,14 +91,14 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 			}
 
 			log.Info().Msgf("New chat created for remotejid: %s", remoteJid)
-			return nil
+			return true, nil
 		}
-		return err
+		return false, nil
 	}
 
 	log.Info().Msgf("Chat found for remotejid: %s", remoteJid)
 
-	return nil
+	return false, nil
 }
 
 func (r *waRepo) SaveMessage(data interface{}) error {
