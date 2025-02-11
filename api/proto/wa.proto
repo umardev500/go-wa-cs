@@ -20,7 +20,7 @@ service WhatsAppService {
     rpc StoreFileMetadata(FileMetadataRequest) returns (FileMetadataResponse);
 
     // ✅ Stream messages
-    rpc StreamMessage(stream StreamMessageRequest) returns (stream StreamMessageResponse);
+    rpc SubscribePresense(stream SubscribePresenseRequest) returns (stream SubscribePresenseResponse);
 
     // ✅ Send online status
     rpc SendOnlineUser(SendOnlineUserRequest) returns (CommonMessageResponse);
@@ -43,11 +43,9 @@ message SendOnlineUserRequest {
 message Empty {}
 
 // ✅ Request for online status
-message StreamMessageRequest {
+message SubscribePresenseRequest {}
 
-}
-
-message StreamMessageResponse {
+message SubscribePresenseResponse {
     string mt = 1;
     repeated string jid = 2;
 }

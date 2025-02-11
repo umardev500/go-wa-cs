@@ -42,11 +42,11 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	return csid, nil
 }
 
-func removeStream(client proto.WhatsAppService_StreamMessageServer) {
+func removeStream(client proto.WhatsAppService_SubscribePresenseServer) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	var updatedClients []proto.WhatsAppService_StreamMessageServer
+	var updatedClients []proto.WhatsAppService_SubscribePresenseServer
 	for _, s := range streamClients {
 		if s != client { // Keep all streams except the one to remove
 			updatedClients = append(updatedClients, s)
@@ -56,7 +56,7 @@ func removeStream(client proto.WhatsAppService_StreamMessageServer) {
 	streamClients = updatedClients
 }
 
-func (w *WaHandler) StreamMessage(stream proto.WhatsAppService_StreamMessageServer) error {
+func (w *WaHandler) SubscribePresense(stream proto.WhatsAppService_SubscribePresenseServer) error {
 	// Register the client connection
 	mu.Lock()
 	streamClients = append(streamClients, stream)

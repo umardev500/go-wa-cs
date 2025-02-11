@@ -23,7 +23,7 @@ const (
 	WhatsAppService_SendExtendedTextMessage_FullMethodName = "/proto.WhatsAppService/SendExtendedTextMessage"
 	WhatsAppService_UploadMedia_FullMethodName             = "/proto.WhatsAppService/UploadMedia"
 	WhatsAppService_StoreFileMetadata_FullMethodName       = "/proto.WhatsAppService/StoreFileMetadata"
-	WhatsAppService_StreamMessage_FullMethodName           = "/proto.WhatsAppService/StreamMessage"
+	WhatsAppService_SubscribePresense_FullMethodName       = "/proto.WhatsAppService/SubscribePresense"
 	WhatsAppService_SendOnlineUser_FullMethodName          = "/proto.WhatsAppService/SendOnlineUser"
 	WhatsAppService_SendTyping_FullMethodName              = "/proto.WhatsAppService/SendTyping"
 )
@@ -41,7 +41,7 @@ type WhatsAppServiceClient interface {
 	// ✅ Store file metadata
 	StoreFileMetadata(ctx context.Context, in *FileMetadataRequest, opts ...grpc.CallOption) (*FileMetadataResponse, error)
 	// ✅ Stream messages
-	StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error)
+	SubscribePresense(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SubscribePresenseRequest, SubscribePresenseResponse], error)
 	// ✅ Send online status
 	SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
 	// ✅ Send typing
@@ -99,18 +99,18 @@ func (c *whatsAppServiceClient) StoreFileMetadata(ctx context.Context, in *FileM
 	return out, nil
 }
 
-func (c *whatsAppServiceClient) StreamMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse], error) {
+func (c *whatsAppServiceClient) SubscribePresense(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SubscribePresenseRequest, SubscribePresenseResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &WhatsAppService_ServiceDesc.Streams[1], WhatsAppService_StreamMessage_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &WhatsAppService_ServiceDesc.Streams[1], WhatsAppService_SubscribePresense_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[StreamMessageRequest, StreamMessageResponse]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SubscribePresenseRequest, SubscribePresenseResponse]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type WhatsAppService_StreamMessageClient = grpc.BidiStreamingClient[StreamMessageRequest, StreamMessageResponse]
+type WhatsAppService_SubscribePresenseClient = grpc.BidiStreamingClient[SubscribePresenseRequest, SubscribePresenseResponse]
 
 func (c *whatsAppServiceClient) SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -145,7 +145,7 @@ type WhatsAppServiceServer interface {
 	// ✅ Store file metadata
 	StoreFileMetadata(context.Context, *FileMetadataRequest) (*FileMetadataResponse, error)
 	// ✅ Stream messages
-	StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error
+	SubscribePresense(grpc.BidiStreamingServer[SubscribePresenseRequest, SubscribePresenseResponse]) error
 	// ✅ Send online status
 	SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error)
 	// ✅ Send typing
@@ -172,8 +172,8 @@ func (UnimplementedWhatsAppServiceServer) UploadMedia(grpc.ClientStreamingServer
 func (UnimplementedWhatsAppServiceServer) StoreFileMetadata(context.Context, *FileMetadataRequest) (*FileMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreFileMetadata not implemented")
 }
-func (UnimplementedWhatsAppServiceServer) StreamMessage(grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method StreamMessage not implemented")
+func (UnimplementedWhatsAppServiceServer) SubscribePresense(grpc.BidiStreamingServer[SubscribePresenseRequest, SubscribePresenseResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribePresense not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendOnlineUser not implemented")
@@ -263,12 +263,12 @@ func _WhatsAppService_StoreFileMetadata_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WhatsAppService_StreamMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(WhatsAppServiceServer).StreamMessage(&grpc.GenericServerStream[StreamMessageRequest, StreamMessageResponse]{ServerStream: stream})
+func _WhatsAppService_SubscribePresense_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(WhatsAppServiceServer).SubscribePresense(&grpc.GenericServerStream[SubscribePresenseRequest, SubscribePresenseResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type WhatsAppService_StreamMessageServer = grpc.BidiStreamingServer[StreamMessageRequest, StreamMessageResponse]
+type WhatsAppService_SubscribePresenseServer = grpc.BidiStreamingServer[SubscribePresenseRequest, SubscribePresenseResponse]
 
 func _WhatsAppService_SendOnlineUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendOnlineUserRequest)
@@ -341,8 +341,8 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "StreamMessage",
-			Handler:       _WhatsAppService_StreamMessage_Handler,
+			StreamName:    "SubscribePresense",
+			Handler:       _WhatsAppService_SubscribePresense_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

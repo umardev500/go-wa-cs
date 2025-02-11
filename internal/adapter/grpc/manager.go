@@ -7,14 +7,14 @@ import (
 )
 
 // Create a global channel to push messages to clients
-var streamChan = make(chan *proto.StreamMessageResponse)
+var streamChan = make(chan *proto.SubscribePresenseResponse)
 var mu sync.Mutex
-var streamClients []proto.WhatsAppService_StreamMessageServer
+var streamClients []proto.WhatsAppService_SubscribePresenseServer
 
-func GetStreamChan() chan<- *proto.StreamMessageResponse {
+func GetStreamChan() chan<- *proto.SubscribePresenseResponse {
 	return streamChan
 }
 
-func GetStreamClients() []proto.WhatsAppService_StreamMessageServer {
+func GetStreamClients() []proto.WhatsAppService_SubscribePresenseServer {
 	return streamClients
 }

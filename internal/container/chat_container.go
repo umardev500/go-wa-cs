@@ -113,7 +113,7 @@ func (c *chatContainer) Api(r fiber.Router) {
 		return nil
 	})
 	chat.Get("/stream", func(c *fiber.Ctx) error {
-		grpc.GetStreamChan() <- &proto.StreamMessageResponse{
+		grpc.GetStreamChan() <- &proto.SubscribePresenseResponse{
 			Mt:  "status",
 			Jid: []string{"6283142765573@s.whatsapp.net"},
 		}
