@@ -14,6 +14,7 @@ type ChatRepo interface {
 	InitializeChat(remoteJid, csId string) (bool, error)
 	GetChatList(ctx context.Context) ([]domain.ChatList, error)
 	CheckExist(ctx context.Context, remoteJid string) (bool, error)
+	CheckExistByCsIdAndRemoteJid(ctx context.Context, userId, remoteJid string) (bool, error)
 }
 
 type chatRepo struct {
@@ -67,6 +68,23 @@ func (r *chatRepo) InitializeChat(remoteJid, csId string) (bool, error) {
 func (c *chatRepo) CheckExist(ctx context.Context, remoteJid string) (bool, error) {
 	coll := c.mongoDb.Db.Collection("messages")
 	filter := bson.D{{Key: "remotejid", Value: remoteJid}}
+	var result bson.M
+	err := coll.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *chatRepo) CheckExistByCsIdAndRemoteJid(ctx context.Context, csId, remoteJid string) (bool, error) {
+	coll := c.mongoDb.Db.Collection("messages")
+	filter := bson.D{
+		{Key: "remotejid", Value: remoteJid},
+		{Key: "csid", Value: csId},
+	}
 	var result bson.M
 	err := coll.FindOne(ctx, filter).Decode(&result)
 	if err != nil {

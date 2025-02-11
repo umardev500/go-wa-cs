@@ -27,6 +27,8 @@ func (h *wsHandler) Handle(c *websocket.Conn) {
 		err error
 	)
 
+	log.Info().Msgf("Connection opened: %s", userId)
+
 	for {
 		_, msg, err = c.ReadMessage()
 		if err != nil {

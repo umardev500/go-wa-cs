@@ -14,6 +14,7 @@ var (
 type MessageType string
 
 var (
-	MessageTypeStatus MessageType = "status"
-	MessageTypeTyping MessageType = "typing"
+	MessageTypeStatus  MessageType = "status"
+	MessageTypeTyping  MessageType = "typing"
+	MessageTypeMessage MessageType = "message"
 )

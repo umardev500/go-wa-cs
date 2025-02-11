@@ -4,14 +4,16 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
+	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/domain"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/types"
+	"github.com/umardev500/chat/pkg/utils"
 )
 
 type ChatUsecase interface {
 	GetChatList(ctx context.Context) *types.Response
-	PushChat(ctx context.Context, csId string, req *domain.PushChat)
+	PushChat(ctx context.Context, csId string, req *domain.PushChat) error
 }
 
 type chatUsecase struct {
@@ -24,16 +26,37 @@ func NewChatUsecase(repo repository.ChatRepo) ChatUsecase {
 	}
 }
 
-func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.PushChat) {
+func (c *chatUsecase) broadcastChat(req *domain.PushChat, csId string) {
+	conn := utils.WsGetClient(csId)
+	if req.TextMessage != nil {
+		req.Mt = string(configs.MessageTypeMessage)
+		conn.WriteJSON(req)
+	}
+
+}
+
+func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.PushChat) error {
 	isInitial, err := c.repo.InitializeChat(req.TextMessage.Metadata.RemoteJid, csId)
 	if err != nil {
 		log.Err(err).Msg("failed to initialize chat")
-		return
+		return err
 	}
 
 	if isInitial {
-		log.Info().Msg("is is initial")
+		req.IsInitial = isInitial
 	}
+
+	exist, err := c.repo.CheckExistByCsIdAndRemoteJid(ctx, csId, req.TextMessage.Metadata.RemoteJid)
+	if err != nil {
+		log.Err(err).Msg("failed to check exist")
+		return err
+	}
+
+	if exist {
+		c.broadcastChat(req, csId)
+	}
+
+	return nil
 }
 
 func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
