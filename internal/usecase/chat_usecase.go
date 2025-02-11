@@ -28,6 +28,10 @@ func NewChatUsecase(repo repository.ChatRepo) ChatUsecase {
 
 func (c *chatUsecase) broadcastChat(req *domain.PushChat, csId string) {
 	conn := utils.WsGetClient(csId)
+	if conn == nil {
+		log.Info().Msgf("connection not found: %s", csId)
+		return
+	}
 	if req.TextMessage != nil {
 		req.Mt = string(configs.MessageTypeMessage)
 		conn.WriteJSON(req)
