@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/domain"
+	grpcManager "github.com/umardev500/chat/internal/grpc"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/pkg/types"
 	"github.com/umardev500/chat/pkg/utils"
@@ -70,7 +72,7 @@ func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.Pus
 		// TODO: Fetch chat list for initialize chat
 		req.Data.IsInitial = isInitial
 
-		chats, err := c.repo.GetChatList(ctx)
+		chats, err := c.getChatList(ctx)
 		if err != nil {
 			log.Err(err).Msg("failed to fetch chat list")
 			return err
@@ -92,8 +94,29 @@ func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.Pus
 	return nil
 }
 
-func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
+func (c *chatUsecase) getChatList(ctx context.Context) ([]domain.ChatList, error) {
 	chats, err := c.repo.GetChatList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Subscribe chats to presense channel
+	var jids []string
+	for _, chat := range chats {
+		jid := chat.RemoteJID
+		jids = append(jids, jid)
+	}
+
+	grpcManager.GetStreamChan() <- &proto.SubscribePresenseResponse{
+		Mt:  string(configs.MessageTypeStatus),
+		Jid: jids,
+	}
+
+	return chats, nil
+}
+
+func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
+	chats, err := c.getChatList(ctx)
 	if err != nil {
 		return &types.Response{
 			Success: false,

@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/domain"
+	grpcManager "github.com/umardev500/chat/internal/grpc"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/internal/usecase"
 	"github.com/umardev500/chat/pkg/utils"
@@ -25,6 +27,10 @@ type WaHandler struct {
 	chatUc usecase.ChatUsecase
 	proto.UnimplementedWhatsAppServiceServer
 }
+
+var (
+	mu sync.Mutex
+)
 
 func NewWaHandler(repo repository.WaRepo, chatUc usecase.ChatUsecase) *WaHandler {
 	return &WaHandler{
@@ -46,27 +52,32 @@ func removeStream(client proto.WhatsAppService_SubscribePresenseServer) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	var presenceClients = grpcManager.GetStreamClients()
+
 	var updatedClients []proto.WhatsAppService_SubscribePresenseServer
-	for _, s := range streamClients {
+	for _, s := range presenceClients {
 		if s != client { // Keep all streams except the one to remove
 			updatedClients = append(updatedClients, s)
 		}
 	}
 
-	streamClients = updatedClients
+	presenceClients = updatedClients
 }
 
 func (w *WaHandler) SubscribePresense(stream proto.WhatsAppService_SubscribePresenseServer) error {
 	// Register the client connection
 	mu.Lock()
-	streamClients = append(streamClients, stream)
+	var presenceClients = grpcManager.GetStreamClients()
+	presenceClients = append(presenceClients, stream)
 	mu.Unlock()
+
+	var presenseChan = grpcManager.GetStreamChan()
 
 	// Start a goroutine to listen for new messages and send them to the client
 	go func() {
-		for msg := range streamChan {
+		for msg := range presenseChan {
 			log.Printf("📤 Sending triggered message: %v", msg.Jid)
-			for _, client := range streamClients {
+			for _, client := range presenceClients {
 				err := client.Send(msg)
 				if err != nil {
 					log.Err(err).Msg("failed to send message")
