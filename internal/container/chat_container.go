@@ -126,7 +126,7 @@ func (c *chatContainer) Api(r fiber.Router) {
 	})
 
 	// update unread counter
-	chat.Get("/update-unread-counter", c.handler.UpdateUnreadCounter)
+	chat.Get("/update-unread-count", c.handler.UpdateUnreadCounter)
 }
 
 func (c *chatContainer) Web(r fiber.Router) {}
