@@ -48,49 +48,35 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	return csid, nil
 }
 
-func removeStream(client proto.WhatsAppService_SubscribePresenseServer) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	var presenceClients = grpcManager.GetStreamClients()
-
-	var updatedClients []proto.WhatsAppService_SubscribePresenseServer
-	for _, s := range presenceClients {
-		if s != client { // Keep all streams except the one to remove
-			updatedClients = append(updatedClients, s)
-		}
+func (w *WaHandler) SubscribePresense(stream proto.WhatsAppService_SubscribePresenseServer) error {
+	// Create a new client with its own message queue
+	client := &grpcManager.PresenceClient{
+		Stream:  stream,
+		MsgChan: make(chan *proto.SubscribePresenseResponse, 1), // Buffered channel
 	}
 
-	presenceClients = updatedClients
-}
-
-func (w *WaHandler) SubscribePresense(stream proto.WhatsAppService_SubscribePresenseServer) error {
 	// Register the client connection
-	mu.Lock()
-	var presenceClients = grpcManager.GetStreamClients()
-	presenceClients = append(presenceClients, stream)
-	mu.Unlock()
+	grpcManager.AddPresenceClient(client)
 
-	var presenseChan = grpcManager.GetStreamChan()
+	log.Info().Msgf("📤 Added presence client: %v", client.Stream)
 
-	// Start a goroutine to listen for new messages and send them to the client
-	go func() {
-		for msg := range presenseChan {
-			log.Printf("📤 Sending triggered message: %v", msg.Jid)
-			for _, client := range presenceClients {
-				err := client.Send(msg)
-				if err != nil {
-					log.Err(err).Msg("failed to send message")
-				}
+	// Start a dedicated sender goroutine for this client
+	go func(c *grpcManager.PresenceClient) {
+		for msg := range c.MsgChan {
+			if err := c.Stream.Send(msg); err != nil {
+				log.Err(err).Msg("Failed to send message, removing client")
+				grpcManager.RemovePresenceClient(c)
+				return
 			}
 		}
-	}()
+	}(client)
 
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
-			log.Err(err).Msg("failed to receive message")
-			removeStream(stream)
+			log.Err(err).Msg("failed to receive presense message")
+			log.Info().Msg("remove presence client")
+			grpcManager.RemovePresenceClient(client)
 			return err
 		}
 
@@ -251,7 +237,10 @@ func (w *WaHandler) SendOnlineUser(ctx context.Context, req *proto.SendOnlineUse
 	}
 
 	for _, client := range wsClients {
+		mu.Lock()
 		err := client.WriteJSON(data)
+		mu.Unlock()
+
 		if err != nil {
 			log.Err(err).Msg("failed to write json to the websocket client")
 			return nil, err

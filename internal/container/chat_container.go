@@ -5,10 +5,8 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/configs"
 	"github.com/umardev500/chat/internal/adapter/rest"
-	"github.com/umardev500/chat/internal/grpc"
 	"github.com/umardev500/chat/internal/repository"
 	"github.com/umardev500/chat/internal/sse"
 	"github.com/umardev500/chat/internal/usecase"
@@ -112,16 +110,8 @@ func (c *chatContainer) Api(r fiber.Router) {
 
 		return nil
 	})
-	chat.Get("/stream", func(c *fiber.Ctx) error {
-		grpc.GetStreamChan() <- &proto.SubscribePresenseResponse{
-			Mt:  "status",
-			Jid: []string{"6283142765573@s.whatsapp.net"},
-		}
 
-		return c.JSON("ok")
-	})
 	chat.Get("/ping", func(c *fiber.Ctx) error {
-		fmt.Println(grpc.GetStreamClients())
 		return c.JSON("pong")
 	})
 

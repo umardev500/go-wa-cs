@@ -1,17 +1,45 @@
 package grpc
 
 import (
+	"sync"
+
+	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
 )
 
-// Create a global channel to push messages to clients
-var presenceChan = make(chan *proto.SubscribePresenseResponse)
-var presenceClients []proto.WhatsAppService_SubscribePresenseServer
-
-func GetStreamChan() chan *proto.SubscribePresenseResponse {
-	return presenceChan
+type PresenceClient struct {
+	Stream  proto.WhatsAppService_SubscribePresenseServer
+	MsgChan chan *proto.SubscribePresenseResponse
 }
 
-func GetStreamClients() []proto.WhatsAppService_SubscribePresenseServer {
-	return presenceClients
+var (
+	mu             sync.Mutex
+	presenceClient []*PresenceClient
+)
+
+func AddPresenceClient(client *PresenceClient) {
+	mu.Lock()
+	defer mu.Unlock()
+	presenceClient = append(presenceClient, client)
+}
+
+func RemovePresenceClient(client *PresenceClient) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for i, c := range presenceClient {
+		if c == client {
+			presenceClient = append(presenceClient[:i], presenceClient[i+1:]...)
+			break
+		}
+	}
+
+	log.Info().Msgf("removed presence client: %v", presenceClient)
+}
+
+func GetPresenceClients() []*PresenceClient {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return presenceClient
 }

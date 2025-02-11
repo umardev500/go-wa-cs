@@ -107,9 +107,11 @@ func (c *chatUsecase) getChatList(ctx context.Context) ([]domain.ChatList, error
 		jids = append(jids, jid)
 	}
 
-	grpcManager.GetStreamChan() <- &proto.SubscribePresenseResponse{
-		Mt:  string(configs.MessageTypeStatus),
-		Jid: jids,
+	for _, client := range grpcManager.GetPresenceClients() {
+		client.MsgChan <- &proto.SubscribePresenseResponse{
+			Mt:  string(configs.MessageTypeStatus),
+			Jid: jids,
+		}
 	}
 
 	return chats, nil
