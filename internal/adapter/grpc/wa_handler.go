@@ -13,19 +13,23 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/api/proto"
 	"github.com/umardev500/chat/configs"
+	"github.com/umardev500/chat/internal/domain"
 	"github.com/umardev500/chat/internal/repository"
+	"github.com/umardev500/chat/internal/usecase"
 	"github.com/umardev500/chat/pkg/utils"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type WaHandler struct {
-	repo repository.WaRepo
+	repo   repository.WaRepo
+	chatUc usecase.ChatUsecase
 	proto.UnimplementedWhatsAppServiceServer
 }
 
-func NewWaHandler(repo repository.WaRepo) *WaHandler {
+func NewWaHandler(repo repository.WaRepo, chatUc usecase.ChatUsecase) *WaHandler {
 	return &WaHandler{
-		repo: repo,
+		repo:   repo,
+		chatUc: chatUc,
 	}
 }
 
@@ -102,15 +106,11 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 		// if not cs is active chating then assign new cs
 	}
 
-	isInitial, err := w.repo.InitializeChat(req.Metadata.RemoteJid, csid)
-	if err != nil {
-		return nil, err
-	}
+	w.chatUc.PushChat(ctx, csid, &domain.PushChat{
+		TextMessage: req,
+	})
 
-	if isInitial {
-		log.Info().Msg("is is initial")
-	}
-
+	// Store chat to the database
 	err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
 	if err != nil {
 		return nil, err

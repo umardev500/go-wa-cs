@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/umardev500/chat/api/proto"
+
 type ChatList struct {
 	Status      string      `json:"status"`
 	UnreadCount int         `json:"unreadCount"`
@@ -21,28 +23,7 @@ type Metadata struct {
 	ID        string `json:"id"`
 }
 
-type ContextInfo struct {
-	StanzaID    string `json:"stanzaId"`
-	Participant string `json:"participant"`
-	// QuotedMessage  QuotedMessage `json:"quotedMessage"`
-}
-
-type MessageText struct {
-	Conversation string `json:"conversation"`
-}
-
-type MessageTextExtended struct {
-	Text        string       `json:"text"`
-	ContextInfo *ContextInfo `json:"contextInfo"`
-}
-
-type Message struct {
-	MessageText *MessageText `json:"messageText"`
-	PushName    string       `json:"pushname"`
-	Timestamp   int64        `json:"timestamp"`
-	Metadata    Metadata     `json:"metadata"`
-}
-
 type PushChat struct {
-	IsInitial bool `json:"isInitial"`
+	IsInitial   bool                      `json:"isInitial"`
+	TextMessage *proto.TextMessageRequest `json:"textMessage"`
 }

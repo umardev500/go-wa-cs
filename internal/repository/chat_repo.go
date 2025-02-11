@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/internal/domain"
 	"github.com/umardev500/chat/pkg/db"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -10,6 +11,7 @@ import (
 )
 
 type ChatRepo interface {
+	InitializeChat(remoteJid, csId string) (bool, error)
 	GetChatList(ctx context.Context) ([]domain.ChatList, error)
 	CheckExist(ctx context.Context, remoteJid string) (bool, error)
 }
@@ -22,6 +24,44 @@ func NewChatRepo(mongoDb *db.Mongo) ChatRepo {
 	return &chatRepo{
 		mongoDb: mongoDb,
 	}
+}
+
+func (r *chatRepo) InitializeChat(remoteJid, csId string) (bool, error) {
+	// Get the collection
+	coll := r.mongoDb.Db.Collection("messages")
+
+	// Create a filter with both remotejid and customer_service_jid
+	filter := bson.D{
+		{Key: "remotejid", Value: remoteJid},
+	}
+
+	// Find the document
+	var result bson.M
+	err := coll.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			newDocument := bson.D{
+				{Key: "remotejid", Value: remoteJid},
+				{Key: "csid", Value: csId},
+				{Key: "status", Value: "queueing"},
+				{Key: "unread_count", Value: 0},
+				{Key: "messages", Value: []string{}}, // Empty message array
+			}
+
+			_, err := coll.InsertOne(context.Background(), newDocument)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to insert new chat")
+			}
+
+			log.Info().Msgf("New chat created for remotejid: %s", remoteJid)
+			return true, nil
+		}
+		return false, nil
+	}
+
+	log.Info().Msgf("Chat found for remotejid: %s", remoteJid)
+
+	return false, nil
 }
 
 func (c *chatRepo) CheckExist(ctx context.Context, remoteJid string) (bool, error) {
