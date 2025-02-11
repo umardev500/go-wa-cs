@@ -33,6 +33,8 @@ func (h *wsHandler) Handle(c *websocket.Conn) {
 		_, msg, err = c.ReadMessage()
 		if err != nil {
 			log.Error().Err(err).Msg("failed to read message")
+			log.Info().Msg("Remove websocket client")
+			utils.WsRemoveClient(userId.(string))
 			break
 		}
 
