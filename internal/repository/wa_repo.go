@@ -70,7 +70,6 @@ func (r *waRepo) InitializeChat(remoteJid, csId string) error {
 	// Create a filter with both remotejid and customer_service_jid
 	filter := bson.D{
 		{Key: "remotejid", Value: remoteJid},
-		{Key: "csid", Value: csId},
 	}
 
 	// Find the document
@@ -146,6 +145,6 @@ func (r *waRepo) PushMessge(remoteJid, csid string, message interface{}) error {
 		return nil
 	}
 
-	log.Info().Msgf("Message added to chat for remotejid: %s and csid: %s", remoteJid, csid)
+	log.Info().Msgf("Message added to chat for remotejid: %s and csid: %s message: %v", remoteJid, csid, message)
 	return nil
 }

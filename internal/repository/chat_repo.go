@@ -11,6 +11,7 @@ import (
 
 type ChatRepo interface {
 	GetChatList(ctx context.Context) ([]domain.ChatList, error)
+	CheckExist(ctx context.Context, remoteJid string) (bool, error)
 }
 
 type chatRepo struct {
@@ -21,6 +22,20 @@ func NewChatRepo(mongoDb *db.Mongo) ChatRepo {
 	return &chatRepo{
 		mongoDb: mongoDb,
 	}
+}
+
+func (c *chatRepo) CheckExist(ctx context.Context, remoteJid string) (bool, error) {
+	coll := c.mongoDb.Db.Collection("messages")
+	filter := bson.D{{Key: "remotejid", Value: remoteJid}}
+	var result bson.M
+	err := coll.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
