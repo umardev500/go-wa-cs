@@ -107,14 +107,11 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 		csid = "xyz"
 	}
 
-	w.chatUc.PushChat(ctx, csid, &domain.PushChat{
+	err = w.chatUc.PushChat(ctx, csid, &domain.PushChat{
 		Data: domain.PushChatData{
 			TextMessage: req,
 		},
 	})
-
-	// Store chat to the database
-	err = w.repo.PushMessge(req.Metadata.RemoteJid, csid, req)
 	if err != nil {
 		return nil, err
 	}

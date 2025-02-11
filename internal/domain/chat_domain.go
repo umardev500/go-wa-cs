@@ -29,6 +29,7 @@ type PushChat struct {
 }
 
 type PushChatData struct {
-	IsInitial   bool                      `json:"isInitial"`
-	TextMessage *proto.TextMessageRequest `json:"textMessage"`
+	IsInitial    bool                      `json:"isInitial"`
+	InitialChats []ChatList                `json:"initial_chats"`
+	TextMessage  *proto.TextMessageRequest `json:"textMessage"`
 }

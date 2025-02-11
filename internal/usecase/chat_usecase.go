@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/configs"
@@ -41,9 +42,14 @@ func (c *chatUsecase) broadcastChat(req *domain.PushChat, csId string) {
 
 func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.PushChat) error {
 	var jid string
+	var messagePayload interface{}
 
 	if req.Data.TextMessage != nil {
 		jid = req.Data.TextMessage.Metadata.RemoteJid
+		messagePayload = req.Data.TextMessage
+	} else {
+		log.Error().Msg("invalid message type")
+		return fmt.Errorf("invalid message type")
 	}
 
 	isInitial, err := c.repo.InitializeChat(jid, csId)
@@ -52,8 +58,24 @@ func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.Pus
 		return err
 	}
 
+	// Push message
+	err = c.repo.PushMessge(jid, csId, messagePayload)
+	if err != nil {
+		log.Err(err).Msg("failed to push message")
+		return err
+	}
+
 	if isInitial {
+		// TODO: Fetch chat list for initialize chat
 		req.Data.IsInitial = isInitial
+
+		chats, err := c.repo.GetChatList(ctx)
+		if err != nil {
+			log.Err(err).Msg("failed to fetch chat list")
+			return err
+		}
+
+		req.Data.InitialChats = chats
 	}
 
 	exist, err := c.repo.CheckExistByCsIdAndRemoteJid(ctx, csId, jid)

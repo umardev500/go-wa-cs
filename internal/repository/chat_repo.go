@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"github.com/umardev500/chat/internal/domain"
@@ -15,6 +16,7 @@ type ChatRepo interface {
 	GetChatList(ctx context.Context) ([]domain.ChatList, error)
 	CheckExist(ctx context.Context, remoteJid string) (bool, error)
 	CheckExistByCsIdAndRemoteJid(ctx context.Context, userId, remoteJid string) (bool, error)
+	PushMessge(remoteJid, csid string, message interface{}) error
 }
 
 type chatRepo struct {
@@ -153,4 +155,37 @@ func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
 	}
 
 	return chatList, nil
+}
+
+func (r *chatRepo) PushMessge(remoteJid, csid string, message interface{}) error {
+	// Get the collection
+	coll := r.mongoDb.Db.Collection("messages")
+
+	// Create a filter with both remotejid and customer_service_jid
+	filter := bson.D{
+		{Key: "remotejid", Value: remoteJid},
+		{Key: "csid", Value: csid},
+	}
+
+	// Define the update operation to push the message into the "messages" array
+	update := bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "messages", Value: message},
+		}},
+	}
+
+	// Perform the update
+	result, err := coll.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to push message: %w", err)
+	}
+
+	// Check if any document was updated
+	if result.MatchedCount == 0 {
+		log.Info().Msgf("No chat found for remotejid: %s and csid: %s, message not added", remoteJid, csid)
+		return nil
+	}
+
+	log.Info().Msgf("Message added to chat for remotejid: %s and csid: %s message: %v", remoteJid, csid, message)
+	return nil
 }
