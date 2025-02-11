@@ -104,6 +104,7 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	if csid == "" {
 		// TODO: do logic for selecting csid
 		// if not cs is active chating then assign new cs
+		csid = "xyz"
 	}
 
 	w.chatUc.PushChat(ctx, csid, &domain.PushChat{
