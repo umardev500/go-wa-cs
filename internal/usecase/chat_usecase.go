@@ -32,7 +32,7 @@ func (c *chatUsecase) broadcastChat(req *domain.PushChat, csId string) {
 		log.Info().Msgf("connection not found: %s", csId)
 		return
 	}
-	if req.TextMessage != nil {
+	if req.Data.TextMessage != nil {
 		req.Mt = string(configs.MessageTypeMessage)
 		conn.WriteJSON(req)
 	}
@@ -40,17 +40,23 @@ func (c *chatUsecase) broadcastChat(req *domain.PushChat, csId string) {
 }
 
 func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.PushChat) error {
-	isInitial, err := c.repo.InitializeChat(req.TextMessage.Metadata.RemoteJid, csId)
+	var jid string
+
+	if req.Data.TextMessage != nil {
+		jid = req.Data.TextMessage.Metadata.RemoteJid
+	}
+
+	isInitial, err := c.repo.InitializeChat(jid, csId)
 	if err != nil {
 		log.Err(err).Msg("failed to initialize chat")
 		return err
 	}
 
 	if isInitial {
-		req.IsInitial = isInitial
+		req.Data.IsInitial = isInitial
 	}
 
-	exist, err := c.repo.CheckExistByCsIdAndRemoteJid(ctx, csId, req.TextMessage.Metadata.RemoteJid)
+	exist, err := c.repo.CheckExistByCsIdAndRemoteJid(ctx, csId, jid)
 	if err != nil {
 		log.Err(err).Msg("failed to check exist")
 		return err

@@ -108,7 +108,9 @@ func (w *WaHandler) SendTextMessage(ctx context.Context, req *proto.TextMessageR
 	}
 
 	w.chatUc.PushChat(ctx, csid, &domain.PushChat{
-		TextMessage: req,
+		Data: domain.PushChatData{
+			TextMessage: req,
+		},
 	})
 
 	// Store chat to the database

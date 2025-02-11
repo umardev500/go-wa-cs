@@ -24,7 +24,11 @@ type Metadata struct {
 }
 
 type PushChat struct {
-	Mt          string                    `json:"mt"`
+	Mt   string       `json:"mt"`
+	Data PushChatData `json:"data"`
+}
+
+type PushChatData struct {
 	IsInitial   bool                      `json:"isInitial"`
 	TextMessage *proto.TextMessageRequest `json:"textMessage"`
 }
