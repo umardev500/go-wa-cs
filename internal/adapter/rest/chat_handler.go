@@ -34,7 +34,9 @@ func (ch *chatHandler) GetChatList(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	resp := ch.uc.GetChatList(ctx)
+	csid := c.Query("csid", "xyz")
+
+	resp := ch.uc.GetChatList(ctx, csid)
 	time.Sleep(2 * time.Second)
 
 	return c.JSON(resp)

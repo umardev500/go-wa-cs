@@ -15,7 +15,7 @@ import (
 )
 
 type ChatUsecase interface {
-	GetChatList(ctx context.Context) *types.Response
+	GetChatList(ctx context.Context, csid string) *types.Response
 	UpdateUnreadCounter(ctx context.Context, csId string, jid string) types.Response
 	PushChat(ctx context.Context, csId string, req *domain.PushChat) error
 }
@@ -72,7 +72,7 @@ func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.Pus
 		// TODO: Fetch chat list for initialize chat
 		req.Data.IsInitial = isInitial
 
-		chats, err := c.getChatList(ctx)
+		chats, err := c.getChatList(ctx, &jid, csId)
 		if err != nil {
 			log.Err(err).Msg("failed to fetch chat list")
 			return err
@@ -94,8 +94,8 @@ func (c *chatUsecase) PushChat(ctx context.Context, csId string, req *domain.Pus
 	return nil
 }
 
-func (c *chatUsecase) getChatList(ctx context.Context) ([]domain.ChatList, error) {
-	chats, err := c.repo.GetChatList(ctx)
+func (c *chatUsecase) getChatList(ctx context.Context, remoteJid *string, csid string) ([]domain.ChatList, error) {
+	chats, err := c.repo.GetChatList(ctx, remoteJid, csid)
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,8 @@ func (c *chatUsecase) getChatList(ctx context.Context) ([]domain.ChatList, error
 	return chats, nil
 }
 
-func (c *chatUsecase) GetChatList(ctx context.Context) *types.Response {
-	chats, err := c.getChatList(ctx)
+func (c *chatUsecase) GetChatList(ctx context.Context, csid string) *types.Response {
+	chats, err := c.getChatList(ctx, nil, csid)
 	if err != nil {
 		return &types.Response{
 			Success: false,

@@ -13,7 +13,7 @@ import (
 
 type ChatRepo interface {
 	InitializeChat(remoteJid, csId string) (bool, error)
-	GetChatList(ctx context.Context) ([]domain.ChatList, error)
+	GetChatList(ctx context.Context, remoteJid *string, csid string) ([]domain.ChatList, error)
 	CheckExist(ctx context.Context, remoteJid string) (bool, error)
 	CheckExistByCsIdAndRemoteJid(ctx context.Context, userId, remoteJid string) (bool, error)
 	PushMessge(remoteJid, csid string, message interface{}) error
@@ -100,23 +100,29 @@ func (c *chatRepo) CheckExistByCsIdAndRemoteJid(ctx context.Context, csId, remot
 	return true, nil
 }
 
-func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
+func (c *chatRepo) GetChatList(ctx context.Context, remoteJid *string, csid string) ([]domain.ChatList, error) {
 	coll := c.mongoDb.Db.Collection("messages")
+
+	// Build the $match filter dynamically
+	matchFilter := bson.D{{Key: "csid", Value: csid}} // Always filter by csid
+
+	// If remoteJid is not nil, add it to the filter
+	if remoteJid != nil && *remoteJid != "" {
+		matchFilter = append(matchFilter, bson.E{Key: "remotejid", Value: *remoteJid})
+	}
 
 	aggregationPipeline := mongo.Pipeline{
 		bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "csid", Value: "xyz"},
-			}},
+			{Key: "$match", Value: matchFilter},
 		},
 		bson.D{
 			{Key: "$unwind", Value: "$messages"},
 		},
-		bson.D{
-			{Key: "$sort", Value: bson.D{
-				{Key: "messages.timestamp", Value: -1},
-			}},
-		},
+		// bson.D{
+		// 	{Key: "$sort", Value: bson.D{
+		// 		{Key: "messages.timestamp", Value: 1},
+		// 	}},
+		// },
 		bson.D{
 			{Key: "$group", Value: bson.D{
 				{Key: "_id", Value: bson.D{
