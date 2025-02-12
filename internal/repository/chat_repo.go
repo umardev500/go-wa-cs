@@ -37,6 +37,7 @@ func (r *chatRepo) InitializeChat(remoteJid, csId string) (bool, error) {
 	// Create a filter with both remotejid and customer_service_jid
 	filter := bson.D{
 		{Key: "remotejid", Value: remoteJid},
+		{Key: "csid", Value: csId},
 	}
 
 	// Find the document
