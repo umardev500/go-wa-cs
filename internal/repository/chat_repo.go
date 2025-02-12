@@ -105,6 +105,11 @@ func (c *chatRepo) GetChatList(ctx context.Context) ([]domain.ChatList, error) {
 
 	aggregationPipeline := mongo.Pipeline{
 		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "csid", Value: "xyz"},
+			}},
+		},
+		bson.D{
 			{Key: "$unwind", Value: "$messages"},
 		},
 		bson.D{
