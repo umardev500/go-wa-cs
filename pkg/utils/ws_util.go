@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/contrib/websocket"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -17,6 +18,8 @@ func WsAddClient(userId string, conn *websocket.Conn) {
 
 	if _, ok := wsClients[userId]; !ok {
 		wsClients[userId] = conn
+	} else {
+		log.Info().Msgf("Connection already exists: %s and will be overriden", userId)
 	}
 
 	wsClients[userId] = conn
