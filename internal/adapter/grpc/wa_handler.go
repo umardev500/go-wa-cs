@@ -48,6 +48,43 @@ func (w *WaHandler) getCsid(remoteJid string) (string, error) {
 	return csid, nil
 }
 
+func (w *WaHandler) SubscribeProfilePic(stream proto.WhatsAppService_SubscribeProfilePicServer) error {
+	// Create a new client with its own message queue
+	client := &grpcManager.PicClient{
+		Stream:     stream,
+		MsgChan:    make(chan *proto.SubscribeProfilePicResponse, 1), // Buffered channel
+		ResultChan: make(chan string, 1),                             // Buffered channel
+	}
+
+	// Register the client connection
+	grpcManager.AddPicClient(client)
+
+	log.Info().Msgf("📤 Added pic client: %v", client.Stream)
+
+	// Start a dedicated sender goroutine for this client
+	go func(c *grpcManager.PicClient) {
+		for msg := range c.MsgChan {
+			if err := c.Stream.Send(msg); err != nil {
+				log.Err(err).Msg("Failed to send message, removing client")
+				grpcManager.RemovePicClient(c)
+			}
+		}
+	}(client)
+
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			log.Err(err).Msg("failed to receive pic message")
+			log.Info().Msg("remove pic client")
+			grpcManager.RemovePicClient(client)
+			return err
+		}
+
+		client.ResultChan <- msg.Url
+		log.Info().Msgf("📤 Pic message sent: %v", msg)
+	}
+}
+
 func (w *WaHandler) SubscribePresense(stream proto.WhatsAppService_SubscribePresenseServer) error {
 	// Create a new client with its own message queue
 	client := &grpcManager.PresenceClient{

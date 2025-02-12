@@ -115,6 +115,9 @@ func (c *chatContainer) Api(r fiber.Router) {
 		return c.JSON("pong")
 	})
 
+	// Request for profile pic
+	chat.Get("/picture/:jid", c.handler.GetProfilePic)
+
 	// update unread counter
 	chat.Get("/update-unread-count", c.handler.UpdateUnreadCounter)
 }

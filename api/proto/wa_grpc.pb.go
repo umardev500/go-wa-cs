@@ -26,6 +26,7 @@ const (
 	WhatsAppService_SubscribePresense_FullMethodName       = "/proto.WhatsAppService/SubscribePresense"
 	WhatsAppService_SendOnlineUser_FullMethodName          = "/proto.WhatsAppService/SendOnlineUser"
 	WhatsAppService_SendTyping_FullMethodName              = "/proto.WhatsAppService/SendTyping"
+	WhatsAppService_SubscribeProfilePic_FullMethodName     = "/proto.WhatsAppService/SubscribeProfilePic"
 )
 
 // WhatsAppServiceClient is the client API for WhatsAppService service.
@@ -46,6 +47,7 @@ type WhatsAppServiceClient interface {
 	SendOnlineUser(ctx context.Context, in *SendOnlineUserRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
 	// ✅ Send typing
 	SendTyping(ctx context.Context, in *SendTypingRequest, opts ...grpc.CallOption) (*CommonMessageResponse, error)
+	SubscribeProfilePic(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SubscribeProfilePicRequest, SubscribeProfilePicResponse], error)
 }
 
 type whatsAppServiceClient struct {
@@ -132,6 +134,19 @@ func (c *whatsAppServiceClient) SendTyping(ctx context.Context, in *SendTypingRe
 	return out, nil
 }
 
+func (c *whatsAppServiceClient) SubscribeProfilePic(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SubscribeProfilePicRequest, SubscribeProfilePicResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &WhatsAppService_ServiceDesc.Streams[2], WhatsAppService_SubscribeProfilePic_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SubscribeProfilePicRequest, SubscribeProfilePicResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type WhatsAppService_SubscribeProfilePicClient = grpc.BidiStreamingClient[SubscribeProfilePicRequest, SubscribeProfilePicResponse]
+
 // WhatsAppServiceServer is the server API for WhatsAppService service.
 // All implementations must embed UnimplementedWhatsAppServiceServer
 // for forward compatibility.
@@ -150,6 +165,7 @@ type WhatsAppServiceServer interface {
 	SendOnlineUser(context.Context, *SendOnlineUserRequest) (*CommonMessageResponse, error)
 	// ✅ Send typing
 	SendTyping(context.Context, *SendTypingRequest) (*CommonMessageResponse, error)
+	SubscribeProfilePic(grpc.BidiStreamingServer[SubscribeProfilePicRequest, SubscribeProfilePicResponse]) error
 	mustEmbedUnimplementedWhatsAppServiceServer()
 }
 
@@ -180,6 +196,9 @@ func (UnimplementedWhatsAppServiceServer) SendOnlineUser(context.Context, *SendO
 }
 func (UnimplementedWhatsAppServiceServer) SendTyping(context.Context, *SendTypingRequest) (*CommonMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendTyping not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) SubscribeProfilePic(grpc.BidiStreamingServer[SubscribeProfilePicRequest, SubscribeProfilePicResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeProfilePic not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) mustEmbedUnimplementedWhatsAppServiceServer() {}
 func (UnimplementedWhatsAppServiceServer) testEmbeddedByValue()                         {}
@@ -306,6 +325,13 @@ func _WhatsAppService_SendTyping_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WhatsAppService_SubscribeProfilePic_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(WhatsAppServiceServer).SubscribeProfilePic(&grpc.GenericServerStream[SubscribeProfilePicRequest, SubscribeProfilePicResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type WhatsAppService_SubscribeProfilePicServer = grpc.BidiStreamingServer[SubscribeProfilePicRequest, SubscribeProfilePicResponse]
+
 // WhatsAppService_ServiceDesc is the grpc.ServiceDesc for WhatsAppService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -343,6 +369,12 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "SubscribePresense",
 			Handler:       _WhatsAppService_SubscribePresense_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "SubscribeProfilePic",
+			Handler:       _WhatsAppService_SubscribeProfilePic_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

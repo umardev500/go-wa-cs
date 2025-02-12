@@ -27,6 +27,16 @@ service WhatsAppService {
 
     // ✅ Send typing
     rpc SendTyping(SendTypingRequest) returns (CommonMessageResponse);
+
+    rpc SubscribeProfilePic(stream SubscribeProfilePicRequest) returns (stream SubscribeProfilePicResponse);
+}
+
+message SubscribeProfilePicRequest {
+    string url = 1;
+}
+
+message SubscribeProfilePicResponse {
+    string jid = 1;
 }
 
 message SendTypingRequest {

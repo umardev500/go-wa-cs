@@ -18,6 +18,7 @@ type ChatUsecase interface {
 	GetChatList(ctx context.Context, csid string) *types.Response
 	UpdateUnreadCounter(ctx context.Context, csId string, jid string) types.Response
 	PushChat(ctx context.Context, csId string, req *domain.PushChat) error
+	GetProfilePic(ctx context.Context, jid string) *types.Response
 }
 
 type chatUsecase struct {
@@ -27,6 +28,24 @@ type chatUsecase struct {
 func NewChatUsecase(repo repository.ChatRepo) ChatUsecase {
 	return &chatUsecase{
 		repo: repo,
+	}
+}
+
+func (c *chatUsecase) GetProfilePic(ctx context.Context, jid string) *types.Response {
+	client := grpcManager.GetPicClient()
+
+	var url string
+
+	client.MsgChan <- &proto.SubscribeProfilePicResponse{
+		Jid: jid,
+	}
+
+	url = <-client.ResultChan
+
+	return &types.Response{
+		Success: true,
+		Message: "Subscribed to profile pic",
+		Data:    url,
 	}
 }
 

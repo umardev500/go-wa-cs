@@ -18,6 +18,7 @@ type ChatHandler interface {
 	GetChatList(c *fiber.Ctx) error
 	UpdateUnreadCounter(c *fiber.Ctx) error
 	Sse(c *fiber.Ctx) error
+	GetProfilePic(c *fiber.Ctx) error
 }
 
 type chatHandler struct {
@@ -28,6 +29,22 @@ func NewChatHandler(uc usecase.ChatUsecase) ChatHandler {
 	return &chatHandler{
 		uc: uc,
 	}
+}
+
+func (ch *chatHandler) GetProfilePic(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	jid := c.Params("jid")
+
+	if jid == "" {
+		log.Error().Msgf("jid is empty %s", jid)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	resp := ch.uc.GetProfilePic(ctx, jid)
+
+	return c.JSON(resp)
 }
 
 func (ch *chatHandler) GetChatList(c *fiber.Ctx) error {
